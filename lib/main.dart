@@ -1,67 +1,53 @@
-import 'dart:html';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:panel/dashboard.dart';
+import 'package:panel/globals.dart';
+import 'package:panel/interfaces.dart';
+import 'package:panel/login.dart';
 
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  await Globals.init();
+  runApp(const FFAlarmApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FFAlarmApp extends StatelessWidget {
+  const FFAlarmApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return FluentApp(
+      title: 'FF Alarm - Konsole',
+      theme: FluentThemeData(brightness: Brightness.light, accentColor: Colors.blue),
+      darkTheme: FluentThemeData(brightness: Brightness.light, accentColor: Colors.blue),
+      themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
+      home: const LandingPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class LandingPage extends StatefulWidget {
+  const LandingPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<LandingPage> createState() => _LandingPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
 
-    Uri uri = Uri.base;
-    print(uri.queryParameters['user']);
-    print(uri.queryParameters['pass']);
-
-    if (uri.queryParameters.isEmpty) return;
-
-    uri = uri.replace(queryParameters: {});
-
-    window.history.pushState({}, '', uri.toString());
+    if (Globals.loggedIn.value) Interfaces.ping().catchError((_) {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(Uri.base.toString()),
-          ],
-        ),
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: Globals.loggedIn,
+      builder: (context, loggedIn, child) {
+        if (loggedIn) return const DashboardPage();
+        return const LoginPage();
+      },
     );
   }
 }
