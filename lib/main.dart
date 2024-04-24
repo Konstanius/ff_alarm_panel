@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:panel/dashboard.dart';
+import 'package:panel/main_page.dart';
 import 'package:panel/globals.dart';
 import 'package:panel/interfaces.dart';
 import 'package:panel/login.dart';
@@ -45,7 +45,7 @@ class _LandingPageState extends State<LandingPage> {
     return ValueListenableBuilder<bool>(
       valueListenable: Globals.loggedIn,
       builder: (context, loggedIn, child) {
-        if (loggedIn) return const DashboardPage();
+        if (loggedIn) return const MainPage();
         return const LoginPage();
       },
     );

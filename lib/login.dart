@@ -59,15 +59,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
 
-    String pass = uri.queryParameters['pass'] ?? '';
-    if (pass.isNotEmpty) {
-      try {
-        passwordController.text = utf8.decode(base64Decode(pass));
-      } catch (e) {
-        print(e);
-      }
-    }
-
     uri = uri.replace(queryParameters: {});
 
     window.history.pushState({}, '', uri.toString());
