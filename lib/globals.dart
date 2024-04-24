@@ -1,3 +1,4 @@
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,6 +7,9 @@ abstract class Globals {
   static LoginInformation? loginInformation;
   static final ValueNotifier<bool> loggedIn = ValueNotifier(false);
   static late String apiUrl;
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  static BuildContext get context => navigatorKey.currentContext!;
 
   static Future<void> init() async {
     prefs = await SharedPreferences.getInstance();

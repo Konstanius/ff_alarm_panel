@@ -21,6 +21,7 @@ class FFAlarmApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       home: const LandingPage(),
+      navigatorKey: Globals.navigatorKey,
     );
   }
 }

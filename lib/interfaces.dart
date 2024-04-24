@@ -19,9 +19,9 @@ abstract class Interfaces {
       String encoded = base64Encode(gzip.encode(utf8.encode(authRaw))!);
 
       BaseOptions options = BaseOptions(
-        connectTimeout: Duration(milliseconds: timeout),
-        receiveTimeout: Duration(milliseconds: timeout),
-        sendTimeout: Duration(milliseconds: timeout),
+        connectTimeout: const Duration(milliseconds: timeout),
+        receiveTimeout: const Duration(milliseconds: timeout),
+        sendTimeout: const Duration(milliseconds: timeout),
         headers: {'authorization': encoded},
         method: 'POST',
         baseUrl: Globals.apiUrl,

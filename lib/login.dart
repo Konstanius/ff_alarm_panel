@@ -4,6 +4,7 @@ import 'dart:html';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:panel/dialogs.dart';
+import 'package:panel/globals.dart';
 
 import 'interfaces.dart';
 
@@ -68,12 +69,12 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     userController.dispose();
     passwordController.dispose();
-    otpControllers.forEach((element) {
+    for (var element in otpControllers) {
       element.dispose();
-    });
-    otpFocusNodes.forEach((element) {
+    }
+    for (var element in otpFocusNodes) {
       element.dispose();
-    });
+    }
     super.dispose();
   }
 
@@ -93,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(20.0),
             padding: const EdgeInsets.all(20.0),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 400.0),
+              constraints: const BoxConstraints(maxWidth: 400.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
@@ -108,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20.0),
-                  Text(
+                  const Text(
                     'Sie müssen sich anmelden, um auf diese Ressource zugreifen zu können.',
                     style: TextStyle(fontSize: 18.0),
                     textAlign: TextAlign.center,
@@ -116,10 +117,10 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20.0),
                   TextBox(
                     controller: userController,
-                    style: TextStyle(fontSize: 16.0),
+                    style: const TextStyle(fontSize: 16.0),
                     enableSuggestions: true,
-                    prefix: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                    prefix: const Padding(
+                      padding: EdgeInsets.all(8.0),
                       child: Row(
                         children: [
                           Icon(FluentIcons.user_window),
@@ -127,16 +128,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     placeholder: 'Benutzername',
-                    placeholderStyle: TextStyle(fontSize: 16.0),
+                    placeholderStyle: const TextStyle(fontSize: 16.0),
                   ),
                   const SizedBox(height: 10.0),
                   TextBox(
                     controller: passwordController,
                     obscureText: true,
-                    style: TextStyle(fontSize: 16.0),
+                    style: const TextStyle(fontSize: 16.0),
                     enableSuggestions: true,
-                    prefix: Padding(
-                      padding: const EdgeInsets.all(8.0),
+                    prefix: const Padding(
+                      padding: EdgeInsets.all(8.0),
                       child: Row(
                         children: [
                           Icon(FluentIcons.password_field),
@@ -144,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     placeholder: 'Passwort',
-                    placeholderStyle: TextStyle(fontSize: 16.0),
+                    placeholderStyle: const TextStyle(fontSize: 16.0),
                   ),
                   const SizedBox(height: 10.0),
                   CallbackShortcuts(
@@ -195,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(FluentIcons.authenticator_app),
+                        const Icon(FluentIcons.authenticator_app),
                         const SizedBox(width: 10.0),
                         const Text(
                           'OTP',
@@ -210,13 +211,13 @@ class _LoginPageState extends State<LoginPage> {
                               child: TextBox(
                                 controller: otpControllers[i],
                                 focusNode: otpFocusNodes[i],
-                                style: TextStyle(fontSize: 16.0),
+                                style: const TextStyle(fontSize: 16.0),
                                 maxLength: 6,
                                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
                                 enableSuggestions: true,
                                 showCursor: false,
                                 textAlign: TextAlign.center,
-                                placeholderStyle: TextStyle(fontSize: 16.0),
+                                placeholderStyle: const TextStyle(fontSize: 16.0),
                               ),
                             ),
                           ),
@@ -249,24 +250,24 @@ class _LoginPageState extends State<LoginPage> {
                                 message: 'Die Anmeldung wird durchgeführt. Bitte warten Sie einen Moment.',
                               );
                               await Interfaces.login(username: user, password: pass, otp: otp);
-                              Navigator.of(context).pop();
+                              Navigator.of(Globals.context).pop();
                             } catch (e) {
-                              Navigator.of(context).pop();
+                              Navigator.of(Globals.context).pop();
                               Dialogs.errorDialog(
-                                context: context,
+                                context: Globals.context,
                                 title: 'Anmeldefehler',
                                 message: e.toString(),
                               );
 
                               passwordController.clear();
-                              otpControllers.forEach((element) {
+                              for (var element in otpControllers) {
                                 element.clear();
-                              });
+                              }
                               return;
                             }
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
                             child: Text(
                               'Anmelden',
                               style: TextStyle(

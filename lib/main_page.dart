@@ -24,7 +24,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int pageIndex = 0;
 
-  bool mouseInside = true;
   int lastMouseMoved = DateTime.now().millisecondsSinceEpoch;
   Timer? timer;
 
@@ -37,7 +36,7 @@ class _MainPageState extends State<MainPage> {
     uri = uri.replace(queryParameters: {});
     window.history.pushState({}, '', uri.toString());
 
-    timer = Timer.periodic(Duration(seconds: 30), (_) {
+    timer = Timer.periodic(const  Duration(seconds: 30), (_) {
       if (DateTime.now().millisecondsSinceEpoch - lastMouseMoved < 30000) {
         Interfaces.ping().catchError((_) {});
       }
@@ -54,12 +53,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: MouseRegion(
-        onExit: (_) => mouseInside = false,
-        onEnter: (_) => mouseInside = true,
-        onHover: (_) {
-          if (!mouseInside) return;
-          lastMouseMoved = DateTime.now().millisecondsSinceEpoch;
-        },
+        onHover: (_) => lastMouseMoved = DateTime.now().millisecondsSinceEpoch,
         child: NavigationView(
           appBar: NavigationAppBar(
             automaticallyImplyLeading: false,
