@@ -4,6 +4,10 @@ import 'dart:html';
 import 'package:archive/archive.dart';
 import 'package:panel/globals.dart';
 import 'package:dio/dio.dart';
+import 'package:panel/models/alarm.dart';
+import 'package:panel/models/person.dart';
+import 'package:panel/models/station.dart';
+import 'package:panel/models/unit.dart';
 
 abstract class Interfaces {
   static const int timeout = 5000;
@@ -83,5 +87,49 @@ abstract class Interfaces {
   static Future<void> ping() async {
     var response = await _request(method: 'ping', data: {});
     if (response.error != null) throw response.error!;
+  }
+
+  static Future<List<Unit>> unitList() async {
+    var response = await _request(method: 'unitList', data: {});
+    if (response.error != null) throw response.error!;
+
+    List<Unit> units = [];
+    for (var unit in response.response!['units']) {
+      units.add(Unit.fromJson(unit));
+    }
+    return units;
+  }
+
+  static Future<List<Station>> stationList() async {
+    var response = await _request(method: 'stationList', data: {});
+    if (response.error != null) throw response.error!;
+
+    List<Station> stations = [];
+    for (var station in response.response!['stations']) {
+      stations.add(Station.fromJson(station));
+    }
+    return stations;
+  }
+
+  static Future<List<Person>> personList() async {
+    var response = await _request(method: 'personList', data: {});
+    if (response.error != null) throw response.error!;
+
+    List<Person> persons = [];
+    for (var person in response.response!['persons']) {
+      persons.add(Person.fromJson(person));
+    }
+    return persons;
+  }
+
+  static Future<List<Alarm>> alarmList() async {
+    var response = await _request(method: 'alarmList', data: {});
+    if (response.error != null) throw response.error!;
+
+    List<Alarm> alarms = [];
+    for (var alarm in response.response!['alarms']) {
+      alarms.add(Alarm.fromJson(alarm));
+    }
+    return alarms;
   }
 }

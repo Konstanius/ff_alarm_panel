@@ -36,8 +36,11 @@ class _MainPageState extends State<MainPage> {
     uri = uri.replace(queryParameters: {});
     window.history.pushState({}, '', uri.toString());
 
-    timer = Timer.periodic(const  Duration(seconds: 30), (_) {
-      if (DateTime.now().millisecondsSinceEpoch - lastMouseMoved < 30000) {
+    timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      Interfaces.ping().catchError((e, s) {
+        print('Ping error: $e\n$s');
+      });
+      if (DateTime.now().millisecondsSinceEpoch - lastMouseMoved < 31000) {
         Interfaces.ping().catchError((_) {});
       }
     });

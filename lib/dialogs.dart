@@ -1,14 +1,15 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:quickalert/quickalert.dart';
 
+import 'globals.dart';
+
 abstract class Dialogs {
   static void errorDialog({
-    required BuildContext context,
     required String title,
     required String message,
   }) {
     QuickAlert.show(
-      context: context,
+      context: Globals.context,
       type: QuickAlertType.error,
       text: message,
       title: title,
@@ -18,12 +19,11 @@ abstract class Dialogs {
   }
 
   static void loadingDialog({
-    required BuildContext context,
     required String title,
     required String message,
   }) {
     QuickAlert.show(
-      context: context,
+      context: Globals.context,
       type: QuickAlertType.loading,
       text: message,
       title: title,

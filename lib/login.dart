@@ -236,7 +236,6 @@ class _LoginPageState extends State<LoginPage> {
 
                             if (user.isEmpty || pass.isEmpty || otp.length != 6) {
                               Dialogs.errorDialog(
-                                context: context,
                                 title: 'Anmeldefehler',
                                 message: 'Sie müssen zum Anmelden alle Felder ausfüllen.',
                               );
@@ -245,7 +244,6 @@ class _LoginPageState extends State<LoginPage> {
 
                             try {
                               Dialogs.loadingDialog(
-                                context: context,
                                 title: 'Anmelden...',
                                 message: 'Die Anmeldung wird durchgeführt. Bitte warten Sie einen Moment.',
                               );
@@ -254,7 +252,6 @@ class _LoginPageState extends State<LoginPage> {
                             } catch (e) {
                               Navigator.of(Globals.context).pop();
                               Dialogs.errorDialog(
-                                context: Globals.context,
                                 title: 'Anmeldefehler',
                                 message: e.toString(),
                               );
