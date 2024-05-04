@@ -1,4 +1,3 @@
-import 'package:fluent_ui/fluent_ui.dart';
 import 'package:quickalert/quickalert.dart';
 
 import 'globals.dart';

@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 class Station {
   int id;
   String name;
@@ -8,6 +10,15 @@ class Station {
   int stationNumber;
   String address;
   String coordinates;
+  LatLng? get position {
+    var split = coordinates.split(',');
+    try {
+      return LatLng(double.parse(split[0]), double.parse(split[1]));
+    } catch (_) {
+      return null;
+    }
+  }
+
   List<int> persons;
   List<int> adminPersons;
   DateTime updated;

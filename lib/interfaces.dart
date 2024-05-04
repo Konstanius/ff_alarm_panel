@@ -42,6 +42,7 @@ abstract class Interfaces {
       );
 
       Map<String, dynamic> responseData = jsonDecode(utf8.decode(response.data));
+      print("REQUEST: $method\nDATA: $data\nRESPONSE: $responseData\n\n");
 
       if (response.statusCode == HttpStatus.unauthorized) {
         Globals.logout();
@@ -100,6 +101,20 @@ abstract class Interfaces {
     return units;
   }
 
+  static Future<({List<Person> persons, Station station})> unitGetDetails(int unitId) async {
+    var response = await _request(method: 'unitGetDetails', data: {'id': unitId});
+    if (response.error != null) throw response.error!;
+
+    List<Person> persons = [];
+    for (var person in response.response!['persons']) {
+      persons.add(Person.fromJson(person));
+    }
+
+    Station station = Station.fromJson(response.response!['station']);
+
+    return (persons: persons, station: station);
+  }
+
   static Future<List<Station>> stationList() async {
     var response = await _request(method: 'stationList', data: {});
     if (response.error != null) throw response.error!;
@@ -109,6 +124,23 @@ abstract class Interfaces {
       stations.add(Station.fromJson(station));
     }
     return stations;
+  }
+
+  static Future<({List<Unit> units, List<Person> persons})> stationGetDetails(int stationId) async {
+    var response = await _request(method: 'stationGetDetails', data: {'id': stationId});
+    if (response.error != null) throw response.error!;
+
+    List<Unit> units = [];
+    for (var unit in response.response!['units']) {
+      units.add(Unit.fromJson(unit));
+    }
+
+    List<Person> persons = [];
+    for (var person in response.response!['persons']) {
+      persons.add(Person.fromJson(person));
+    }
+
+    return (units: units, persons: persons);
   }
 
   static Future<List<Person>> personList() async {
@@ -122,6 +154,23 @@ abstract class Interfaces {
     return persons;
   }
 
+  static Future<({List<Unit> units, List<Station> stations})> personGetDetails(int personId) async {
+    var response = await _request(method: 'personGetDetails', data: {'id': personId});
+    if (response.error != null) throw response.error!;
+
+    List<Unit> units = [];
+    for (var unit in response.response!['units']) {
+      units.add(Unit.fromJson(unit));
+    }
+
+    List<Station> stations = [];
+    for (var station in response.response!['stations']) {
+      stations.add(Station.fromJson(station));
+    }
+
+    return (units: units, stations: stations);
+  }
+
   static Future<List<Alarm>> alarmList() async {
     var response = await _request(method: 'alarmList', data: {});
     if (response.error != null) throw response.error!;
@@ -131,5 +180,41 @@ abstract class Interfaces {
       alarms.add(Alarm.fromJson(alarm));
     }
     return alarms;
+  }
+
+  static Future<({List<Unit> units, List<Station> stations, List<Person> persons})> alarmGetDetails(int alarmId) async {
+    var response = await _request(method: 'alarmGetDetails', data: {'id': alarmId});
+    if (response.error != null) throw response.error!;
+
+    List<Unit> units = [];
+    for (var unit in response.response!['units']) {
+      units.add(Unit.fromJson(unit));
+    }
+
+    List<Station> stations = [];
+    for (var station in response.response!['stations']) {
+      stations.add(Station.fromJson(station));
+    }
+
+    List<Person> persons = [];
+    for (var person in response.response!['persons']) {
+      persons.add(Person.fromJson(person));
+    }
+
+    return (units: units, stations: stations, persons: persons);
+  }
+
+  static Future<({double lat, double long})> getCoordinates(String address) async {
+    var response = await _request(method: 'getCoordinates', data: {'address': address});
+    if (response.error != null) throw response.error!;
+
+    return (lat: response.response!['lat'] as double, long: response.response!['lon'] as double);
+  }
+
+  static Future<String> getAddress(double lat, double long) async {
+    var response = await _request(method: 'getAddress', data: {'lat': lat, 'lon': long});
+    if (response.error != null) throw response.error!;
+
+    return response.response!['address'] as String;
   }
 }

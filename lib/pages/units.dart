@@ -1,7 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:panel/dialogs.dart';
+import 'package:panel/models/person.dart';
 
 import '../interfaces.dart';
+import '../models/station.dart';
 import '../models/unit.dart';
 
 class UnitsPage extends StatefulWidget {
@@ -18,6 +20,8 @@ class _UnitsPageState extends State<UnitsPage> {
 
   TextEditingController searchController = TextEditingController();
 
+  ({List<Person> persons, Station station})? selectedUnitData;
+
   void fetchUnits() async {
     try {
       setState(() => loading = true);
@@ -29,10 +33,34 @@ class _UnitsPageState extends State<UnitsPage> {
     }
   }
 
+  void fetchUnit() async {
+    selectedUnitData = null;
+    setState(() {});
+    if (selectedUnit == null) {
+      return;
+    }
+
+    int id = selectedUnit!.id;
+    try {
+      var result = await Interfaces.unitGetDetails(id);
+      if (id != selectedUnit!.id) return;
+      selectedUnitData = result;
+    } catch (e) {
+      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+    }
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     fetchUnits();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -98,7 +126,10 @@ class _UnitsPageState extends State<UnitsPage> {
                           title: Text(unit.callSign),
                           subtitle: Text(unit.unitDescription),
                           onPressed: () {
-                            setState(() => selectedUnit = unit);
+                            setState(() {
+                              selectedUnit = unit;
+                              fetchUnit();
+                            });
                           },
                         ),
                       ),
@@ -116,12 +147,15 @@ class _UnitsPageState extends State<UnitsPage> {
               borderRadius: BorderRadius.circular(20),
               child: ColoredBox(
                 color: Colors.grey.withOpacity(0.1),
-                child: selectedUnit == null
-                    ? null
-                    : ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: [],
-                      ),
+                child: () {
+                  // TODO if selectedUnit is null, show a statistic of all units
+                  if (selectedUnit == null) return const SizedBox();
+                  if (selectedUnitData == null) return const Center(child: ProgressRing());
+                  return ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [],
+                  );
+                }(),
               ),
             ),
           ),

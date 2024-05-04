@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:panel/globals.dart';
 import 'package:panel/interfaces.dart';
 import 'package:panel/pages/administrators.dart';
 import 'package:panel/pages/alarms.dart';
@@ -75,6 +76,19 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
               ],
+            ),
+            actions: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: FilledButton(
+                onPressed: Globals.logout,
+                style: ButtonStyle(
+                  backgroundColor: ButtonState.resolveWith((states) {
+                    if (states.contains(ButtonStates.hovering)) return Colors.red.dark;
+                    return Colors.red;
+                  }),
+                ),
+                child: const Text('Abmelden'),
+              ),
             ),
           ),
           pane: NavigationPane(

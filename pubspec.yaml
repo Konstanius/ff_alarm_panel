@@ -13,9 +13,15 @@ dependencies:
   intl: 0.18.1
   fluent_ui: 4.8.7
   shared_preferences: 2.2.3
-  quickalert: 1.1.0
+  quickalert:
+    path: ./packages/quickalert-1.1.0/
   dio: 5.4.3+1
   archive: 3.4.10
+  flutter_map:
+    path: ./packages/flutter_map-6.0.1/
+  latlong2: 0.9.1
+  flutter_map_cancellable_tile_provider:
+    path: ./packages/flutter_map_cancellable_tile_provider-2.0.0/
 
 dev_dependencies:
   flutter_test:

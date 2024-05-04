@@ -4,6 +4,8 @@ import 'package:panel/dialogs.dart';
 
 import '../interfaces.dart';
 import '../models/person.dart';
+import '../models/station.dart';
+import '../models/unit.dart';
 
 class PersonsPage extends StatefulWidget {
   const PersonsPage({super.key});
@@ -19,6 +21,8 @@ class _PersonsPageState extends State<PersonsPage> {
 
   TextEditingController searchController = TextEditingController();
 
+  ({List<Unit> units, List<Station> stations})? selectedPersonData;
+
   void fetchPersons() async {
     try {
       setState(() => loading = true);
@@ -30,10 +34,34 @@ class _PersonsPageState extends State<PersonsPage> {
     }
   }
 
+  void fetchPerson() async {
+    selectedPersonData = null;
+    setState(() {});
+    if (selectedPerson == null) {
+      return;
+    }
+
+    int id = selectedPerson!.id;
+    try {
+      var result = await Interfaces.personGetDetails(id);
+      if (id != selectedPerson!.id) return;
+      selectedPersonData = result;
+    } catch (e) {
+      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+    }
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     fetchPersons();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -99,7 +127,10 @@ class _PersonsPageState extends State<PersonsPage> {
                           title: Text(person.fullName),
                           subtitle: Text('Geb.: ${DateFormat('dd.MM.yyyy').format(person.birthday)}'),
                           onPressed: () {
-                            setState(() => selectedPerson = person);
+                            setState(() {
+                              selectedPerson = person;
+                              fetchPerson();
+                            });
                           },
                         ),
                       ),
@@ -117,12 +148,15 @@ class _PersonsPageState extends State<PersonsPage> {
               borderRadius: BorderRadius.circular(20),
               child: ColoredBox(
                 color: Colors.grey.withOpacity(0.1),
-                child: selectedPerson == null
-                    ? null
-                    : ListView(
-                  padding: const EdgeInsets.all(12),
-                  children: [],
-                ),
+                child: () {
+                  // TODO if selectedPerson is null, show a statistic of all persons
+                  if (selectedPerson == null) return const SizedBox();
+                  if (selectedPersonData == null) return const Center(child: ProgressRing());
+                  return ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [],
+                  );
+                }(),
               ),
             ),
           ),

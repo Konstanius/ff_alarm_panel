@@ -1,9 +1,11 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:intl/intl.dart';
 import 'package:panel/dialogs.dart';
 
 import '../interfaces.dart';
 import '../models/alarm.dart';
+import '../models/person.dart';
+import '../models/station.dart';
+import '../models/unit.dart';
 
 class AlarmsPage extends StatefulWidget {
   const AlarmsPage({super.key});
@@ -19,6 +21,8 @@ class _AlarmsPageState extends State<AlarmsPage> {
 
   TextEditingController searchController = TextEditingController();
 
+  ({List<Unit> units, List<Station> stations, List<Person> persons})? selectedAlarmData;
+
   void fetchAlarms() async {
     try {
       setState(() => loading = true);
@@ -30,10 +34,34 @@ class _AlarmsPageState extends State<AlarmsPage> {
     }
   }
 
+  void fetchAlarm() async {
+    selectedAlarmData = null;
+    setState(() {});
+    if (selectedAlarm == null) {
+      return;
+    }
+
+    int id = selectedAlarm!.id;
+    try {
+      var result = await Interfaces.alarmGetDetails(id);
+      if (id != selectedAlarm!.id) return;
+      selectedAlarmData = result;
+    } catch (e) {
+      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+    }
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     fetchAlarms();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -97,9 +125,12 @@ class _AlarmsPageState extends State<AlarmsPage> {
                       Acrylic(
                         child: ListTile(
                           title: Text("${alarm.type} - ${alarm.word}"),
-                          subtitle: Text('Geb.: ${DateFormat('dd.MM.yyyy HH:mm').format(alarm.date)}'),
+                          subtitle: Text(alarm.address),
                           onPressed: () {
-                            setState(() => selectedAlarm = alarm);
+                            setState(() {
+                              selectedAlarm = alarm;
+                              fetchAlarm();
+                            });
                           },
                         ),
                       ),
@@ -117,12 +148,15 @@ class _AlarmsPageState extends State<AlarmsPage> {
               borderRadius: BorderRadius.circular(20),
               child: ColoredBox(
                 color: Colors.grey.withOpacity(0.1),
-                child: selectedAlarm == null
-                    ? null
-                    : ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: [],
-                      ),
+                child: () {
+                  // TODO if selectedAlarm is null, show a Map and statistic of all alarms of a selected time frame
+                  if (selectedAlarm == null) return const SizedBox();
+                  if (selectedAlarmData == null) return const Center(child: ProgressRing());
+                  return ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [],
+                  );
+                }(),
               ),
             ),
           ),

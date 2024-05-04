@@ -37,7 +37,9 @@ class _LoginPageState extends State<LoginPage> {
             }
             otpControllers[i].text = value.substring(0, 1);
 
-            otpFocusNodes[i + value.length - 1].requestFocus();
+            if (i + value.length - 1 < 5) {
+              otpFocusNodes[i + value.length - 1].requestFocus();
+            }
             return;
           }
 
@@ -129,6 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     placeholder: 'Benutzername',
                     placeholderStyle: const TextStyle(fontSize: 16.0),
+                    onSubmitted: (_) => loginFunction(),
                   ),
                   const SizedBox(height: 10.0),
                   TextBox(
@@ -146,6 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     placeholder: 'Passwort',
                     placeholderStyle: const TextStyle(fontSize: 16.0),
+                    onSubmitted: (_) => loginFunction(),
                   ),
                   const SizedBox(height: 10.0),
                   CallbackShortcuts(
@@ -218,6 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                                 showCursor: false,
                                 textAlign: TextAlign.center,
                                 placeholderStyle: const TextStyle(fontSize: 16.0),
+                                onSubmitted: (_) => loginFunction(),
                               ),
                             ),
                           ),
@@ -229,40 +234,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       Expanded(
                         child: FilledButton(
-                          onPressed: () async {
-                            String user = userController.text;
-                            String pass = passwordController.text;
-                            String otp = otpControllers.map((e) => e.text).join();
-
-                            if (user.isEmpty || pass.isEmpty || otp.length != 6) {
-                              Dialogs.errorDialog(
-                                title: 'Anmeldefehler',
-                                message: 'Sie müssen zum Anmelden alle Felder ausfüllen.',
-                              );
-                              return;
-                            }
-
-                            try {
-                              Dialogs.loadingDialog(
-                                title: 'Anmelden...',
-                                message: 'Die Anmeldung wird durchgeführt. Bitte warten Sie einen Moment.',
-                              );
-                              await Interfaces.login(username: user, password: pass, otp: otp);
-                              Navigator.of(Globals.context).pop();
-                            } catch (e) {
-                              Navigator.of(Globals.context).pop();
-                              Dialogs.errorDialog(
-                                title: 'Anmeldefehler',
-                                message: e.toString(),
-                              );
-
-                              passwordController.clear();
-                              for (var element in otpControllers) {
-                                element.clear();
-                              }
-                              return;
-                            }
-                          },
+                          onPressed: loginFunction,
                           child: const Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
@@ -285,5 +257,40 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     );
+  }
+
+  Future<void> loginFunction() async {
+    String user = userController.text;
+    String pass = passwordController.text;
+    String otp = otpControllers.map((e) => e.text).join();
+
+    if (user.isEmpty || pass.isEmpty || otp.length != 6) {
+      Dialogs.errorDialog(
+        title: 'Anmeldefehler',
+        message: 'Sie müssen zum Anmelden alle Felder ausfüllen.',
+      );
+      return;
+    }
+
+    try {
+      Dialogs.loadingDialog(
+        title: 'Anmelden...',
+        message: 'Die Anmeldung wird durchgeführt. Bitte warten Sie einen Moment.',
+      );
+      await Interfaces.login(username: user, password: pass, otp: otp);
+      Navigator.of(Globals.context).pop();
+    } catch (e) {
+      Navigator.of(Globals.context).pop();
+      Dialogs.errorDialog(
+        title: 'Anmeldefehler',
+        message: e.toString(),
+      );
+
+      passwordController.clear();
+      for (var element in otpControllers) {
+        element.clear();
+      }
+      return;
+    }
   }
 }

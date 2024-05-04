@@ -7,9 +7,9 @@ abstract class Globals {
   static LoginInformation? loginInformation;
   static final ValueNotifier<bool> loggedIn = ValueNotifier(false);
   static late String apiUrl;
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  static BuildContext get context => navigatorKey.currentContext!;
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static BuildContext get context => navigatorKey.currentState!.context;
 
   static Future<void> init() async {
     prefs = await SharedPreferences.getInstance();
