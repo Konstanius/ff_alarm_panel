@@ -3,9 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:panel/dialogs.dart';
 
 import '../interfaces.dart';
+import '../main_page.dart';
 import '../models/person.dart';
 import '../models/station.dart';
 import '../models/unit.dart';
+import '../other/elements.dart';
 
 class PersonsPage extends StatefulWidget {
   const PersonsPage({super.key});
@@ -23,7 +25,7 @@ class _PersonsPageState extends State<PersonsPage> {
 
   ({List<Unit> units, List<Station> stations})? selectedPersonData;
 
-  void fetchPersons() async {
+  Future<void> fetchPersons() async {
     try {
       setState(() => loading = true);
       persons = await Interfaces.personList();
@@ -52,10 +54,29 @@ class _PersonsPageState extends State<PersonsPage> {
     setState(() {});
   }
 
+  void selectPerson(Person person) {
+    if (selectedPerson?.id == person.id) return;
+    setState(() {
+      selectedPerson = person;
+      fetchPerson();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    fetchPersons();
+    fetchPersons().then((_) {
+      try {
+        int? id = MainPageState.selectionQueue.value;
+        if (id != null) {
+          MainPageState.selectionQueue.value = null;
+          var person = persons!.firstWhere((element) => element.id == id);
+          selectPerson(person);
+        }
+      } catch (e) {
+        Dialogs.errorDialog(message: "Die ausgewählte Person konnte nicht gefunden werden.");
+      }
+    });
   }
 
   @override
@@ -122,17 +143,31 @@ class _PersonsPageState extends State<PersonsPage> {
                     ),
                     const SizedBox(height: 10),
                     for (var person in filtered)
-                      Acrylic(
-                        child: ListTile(
-                          title: Text(person.fullName),
-                          subtitle: Text('Geb.: ${DateFormat('dd.MM.yyyy').format(person.birthday)}'),
-                          onPressed: () {
-                            setState(() {
-                              selectedPerson = person;
-                              fetchPerson();
-                            });
-                          },
+                      UIElements.listButton(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  person.fullName,
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  'Geb.: ${DateFormat('dd.MM.yyyy').format(person.birthday)}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                        onPressed: () => selectPerson(person),
+                        selected: selectedPerson?.id == person.id,
                       ),
                   ],
                 ),

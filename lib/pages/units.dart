@@ -74,7 +74,7 @@ class _UnitsPageState extends State<UnitsPage> {
           selectUnit(unit);
         }
       } catch (e) {
-        print(e);
+        Dialogs.errorDialog(message: "Die ausgewählte Einheit konnte nicht gefunden werden.");
       }
     });
   }

@@ -119,7 +119,7 @@ class _StationsPageState extends State<StationsPage> {
           selectStation(station);
         }
       } catch (e) {
-        print(e);
+        Dialogs.errorDialog(message: "Die ausgewählte Wache konnte nicht gefunden werden.");
       }
     });
   }

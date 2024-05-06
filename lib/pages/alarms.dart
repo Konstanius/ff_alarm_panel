@@ -1,11 +1,14 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:intl/intl.dart';
 import 'package:panel/dialogs.dart';
 
 import '../interfaces.dart';
+import '../main_page.dart';
 import '../models/alarm.dart';
 import '../models/person.dart';
 import '../models/station.dart';
 import '../models/unit.dart';
+import '../other/elements.dart';
 
 class AlarmsPage extends StatefulWidget {
   const AlarmsPage({super.key});
@@ -23,7 +26,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
 
   ({List<Unit> units, List<Station> stations, List<Person> persons})? selectedAlarmData;
 
-  void fetchAlarms() async {
+  Future<void> fetchAlarms() async {
     try {
       setState(() => loading = true);
       alarms = await Interfaces.alarmList();
@@ -52,10 +55,29 @@ class _AlarmsPageState extends State<AlarmsPage> {
     setState(() {});
   }
 
+  void selectAlarm(Alarm alarm) {
+    if (selectedAlarm?.id == alarm.id) return;
+    setState(() {
+      selectedAlarm = alarm;
+      fetchAlarm();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    fetchAlarms();
+    fetchAlarms().then((_) {
+      try {
+        int? id = MainPageState.selectionQueue.value;
+        if (id != null) {
+          MainPageState.selectionQueue.value = null;
+          var alarm = alarms!.firstWhere((element) => element.id == id);
+          selectAlarm(alarm);
+        }
+      } catch (e) {
+        Dialogs.errorDialog(message: "Die ausgewählte Alarmierung konnte nicht gefunden werden.");
+      }
+    });
   }
 
   @override
@@ -122,17 +144,39 @@ class _AlarmsPageState extends State<AlarmsPage> {
                     ),
                     const SizedBox(height: 10),
                     for (var alarm in filtered)
-                      Acrylic(
-                        child: ListTile(
-                          title: Text("${alarm.type} - ${alarm.word}"),
-                          subtitle: Text(alarm.address),
-                          onPressed: () {
-                            setState(() {
-                              selectedAlarm = alarm;
-                              fetchAlarm();
-                            });
-                          },
+                      UIElements.listButton(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "${alarm.type} - ${alarm.word}",
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  alarm.address,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  DateFormat('HH:mm - EEEE, dd.MM.yyyy', 'de_DE').format(alarm.date),
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                        onPressed: () => selectAlarm(alarm),
+                        selected: selectedAlarm?.id == alarm.id,
                       ),
                   ],
                 ),
