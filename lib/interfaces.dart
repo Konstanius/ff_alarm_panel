@@ -222,4 +222,50 @@ abstract class Interfaces {
     var response = await _request(method: 'stationDelete', data: {'id': stationId});
     if (response.error != null) throw response.error!;
   }
+
+  static Future<void> stationUpdate({
+    required int id,
+    required String name,
+    required String area,
+    required String prefix,
+    required int stationNumber,
+    required String address,
+    required String coordinates,
+  }) async {
+    var data = {
+      'id': id,
+      'name': name,
+      'area': area,
+      'prefix': prefix,
+      'stationnumber': stationNumber,
+      'address': address,
+      'coordinates': coordinates,
+    };
+
+    var response = await _request(method: 'stationUpdate', data: data);
+    if (response.error != null) throw response.error!;
+  }
+
+  static Future<Station> stationCreate({
+    required String name,
+    required String area,
+    required String prefix,
+    required int stationNumber,
+    required String address,
+    required String coordinates,
+  }) async {
+    var data = {
+      'name': name,
+      'area': area,
+      'prefix': prefix,
+      'stationnumber': stationNumber,
+      'address': address,
+      'coordinates': coordinates,
+    };
+
+    var response = await _request(method: 'stationCreate', data: data);
+    if (response.error != null) throw response.error!;
+
+    return Station.fromJson(response.response!);
+  }
 }

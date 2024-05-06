@@ -19,16 +19,18 @@ abstract class UIElements {
   static Widget rowEditor(TextEditingController controller, String text, {RegExp? validation, bool disabled = false}) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: TextBox(
+      child: TextFormBox(
         controller: controller,
         placeholder: text,
         readOnly: disabled,
-        inputFormatters: [
-          if (validation != null) FilteringTextInputFormatter.allow(validation),
-        ],
-        style: const TextStyle(
-          fontSize: 16,
-        ),
+        autovalidateMode: AutovalidateMode.always,
+        validator: (value) {
+          if (value == null || validation == null) return null;
+          if (!validation.hasMatch('') && value.isEmpty) return 'Eingabe darf nicht leer sein';
+          if (!validation.hasMatch(value)) return 'Ungültige Eingabe';
+          return null;
+        },
+        style: const TextStyle(fontSize: 16),
       ),
     );
   }

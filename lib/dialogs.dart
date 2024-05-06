@@ -1,3 +1,4 @@
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:quickalert/quickalert.dart';
 
 import 'globals.dart';
@@ -44,6 +45,10 @@ abstract class Dialogs {
       title: title,
       barrierDismissible: true,
       width: 400,
+      cancelBtnText: 'Abbrechen',
+      confirmBtnText: 'Bestätigen',
+      onConfirmBtnTap: () => Navigator.of(Globals.context).pop(true),
+      onCancelBtnTap: () => Navigator.of(Globals.context).pop(false),
     );
 
     return result == true;
