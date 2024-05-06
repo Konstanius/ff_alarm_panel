@@ -15,15 +15,30 @@ import 'package:panel/pages/persons.dart';
 import 'package:panel/pages/stations.dart';
 import 'package:panel/pages/units.dart';
 
+import 'other/styles.dart';
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<MainPage> createState() => MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
-  int pageIndex = 0;
+enum NavigationPage {
+  dashboard,
+  stations,
+  units,
+  persons,
+  alarms,
+  logs,
+  auditLogs,
+  administrators,
+  diagnostics,
+}
+
+class MainPageState extends State<MainPage> {
+  static final ValueNotifier<NavigationPage> page = ValueNotifier(NavigationPage.dashboard);
+  static final ValueNotifier<int?> selectionQueue = ValueNotifier(null);
 
   int lastMouseMoved = DateTime.now().millisecondsSinceEpoch;
   Timer? timer;
@@ -58,45 +73,45 @@ class _MainPageState extends State<MainPage> {
     return SafeArea(
       child: MouseRegion(
         onHover: (_) => lastMouseMoved = DateTime.now().millisecondsSinceEpoch,
-        child: NavigationView(
-          appBar: NavigationAppBar(
-            automaticallyImplyLeading: false,
-            title: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.asset('assets/icon.png', fit: BoxFit.contain),
+        child: ValueListenableBuilder(
+          valueListenable: page,
+          builder: (context, NavigationPage page, child) {
+            return NavigationView(
+              appBar: NavigationAppBar(
+                automaticallyImplyLeading: false,
+                title: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset('assets/icon.png', fit: BoxFit.contain),
+                    ),
+                    Text(
+                      'FF Alarm - Administrationskonsole',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'FF Alarm - Administrationskonsole',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                actions: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: FilledButton(
+                    onPressed: Globals.logout,
+                    style: UIStyles.buttonRed,
+                    child: const Text('Abmelden'),
                   ),
                 ),
-              ],
-            ),
-            actions: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: FilledButton(
-                onPressed: Globals.logout,
-                style: ButtonStyle(
-                  backgroundColor: ButtonState.resolveWith((states) {
-                    if (states.contains(ButtonStates.hovering)) return Colors.red.dark;
-                    return Colors.red;
-                  }),
-                ),
-                child: const Text('Abmelden'),
               ),
-            ),
-          ),
-          pane: NavigationPane(
-            selected: pageIndex,
-            onChanged: (index) => setState(() => pageIndex = index),
-            displayMode: PaneDisplayMode.open,
-            items: items,
-          ),
+              pane: NavigationPane(
+                selected: page.index,
+                onChanged: (index) => MainPageState.page.value = NavigationPage.values[index],
+                displayMode: PaneDisplayMode.open,
+                items: items,
+              ),
+            );
+          }
         ),
       ),
     );

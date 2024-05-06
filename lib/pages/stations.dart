@@ -1,17 +1,18 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:panel/dialogs.dart';
 import 'package:panel/globals.dart';
+import 'package:panel/main_page.dart';
 import 'package:panel/map.dart';
 import 'package:panel/models/unit.dart';
 import 'package:flutter/material.dart' as mat show Icons, Icon, IconButton;
+import 'package:panel/other/styles.dart';
 
 import '../interfaces.dart';
 import '../models/person.dart';
 import '../models/station.dart';
+import '../other/elements.dart';
 
 class StationsPage extends StatefulWidget {
   const StationsPage({super.key});
@@ -42,6 +43,7 @@ class _StationsPageState extends State<StationsPage> {
   final TextEditingController coordinatesLonController = TextEditingController();
 
   void selectStation(Station station) {
+    if (selectedStation?.id == station.id) return;
     idController.text = station.id.toString();
     nameController.text = station.name;
     areaController.text = station.area;
@@ -56,7 +58,7 @@ class _StationsPageState extends State<StationsPage> {
     });
   }
 
-  void fetchStations() async {
+  Future<void> fetchStations() async {
     try {
       setState(() => loading = true);
       stations = await Interfaces.stationList();
@@ -81,7 +83,7 @@ class _StationsPageState extends State<StationsPage> {
       }
       this.positions.value = positions;
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -100,7 +102,7 @@ class _StationsPageState extends State<StationsPage> {
       if (id != selectedStation!.id) return;
       selectedStationData = result;
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     }
     setState(() {});
   }
@@ -108,7 +110,18 @@ class _StationsPageState extends State<StationsPage> {
   @override
   void initState() {
     super.initState();
-    fetchStations();
+    fetchStations().then((_) {
+      try {
+        int? id = MainPageState.selectionQueue.value;
+        if (id != null) {
+          MainPageState.selectionQueue.value = null;
+          var station = stations!.firstWhere((element) => element.id == id);
+          selectStation(station);
+        }
+      } catch (e) {
+        print(e);
+      }
+    });
   }
 
   @override
@@ -186,12 +199,31 @@ class _StationsPageState extends State<StationsPage> {
                     ),
                     const SizedBox(height: 10),
                     for (var station in filtered)
-                      Acrylic(
-                        child: ListTile(
-                          title: Text(station.name),
-                          subtitle: Text(station.descriptiveNameShort),
-                          onPressed: () => selectStation(station),
+                      UIElements.listButton(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  station.descriptiveName,
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  station.address,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                        onPressed: () => selectStation(station),
+                        selected: selectedStation?.id == station.id,
                       ),
                   ],
                 ),
@@ -239,9 +271,20 @@ class _StationsPageState extends State<StationsPage> {
                     padding: const EdgeInsets.all(12),
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Flexible(child: Text(selectedStation!.descriptiveName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    selectedStation!.descriptiveName,
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           FilledButton(
                             child: const Padding(
                               padding: EdgeInsets.all(4.0),
@@ -254,6 +297,35 @@ class _StationsPageState extends State<StationsPage> {
                               });
                             },
                           ),
+                          const SizedBox(width: 10),
+                          FilledButton(
+                            onPressed: () async {
+                              if (selectedStationData!.units.isNotEmpty) {
+                                Dialogs.errorDialog(message: "Wache kann nicht gelöscht werden, da dieser noch Einheiten zugeordnet sind.");
+                                return;
+                              }
+
+                              bool confirm = await Dialogs.confirmDialog(title: 'Wache löschen', message: 'Sind Sie sicher, dass Sie die Wache löschen möchten?');
+                              if (!confirm) return;
+
+                              Dialogs.loadingDialog(title: 'Löschen...', message: 'Lösche Wache...');
+                              try {
+                                await Interfaces.stationDelete(selectedStation!.id);
+                                stations!.remove(selectedStation!);
+                                selectedStation = null;
+                                selectedStationData = null;
+                                if (mounted) setState(() {});
+                                fetchStations();
+                              } catch (e) {
+                                Dialogs.errorDialog(message: e.toString());
+                              }
+                            },
+                            style: UIStyles.buttonRed,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Text('Wache löschen'),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -265,26 +337,26 @@ class _StationsPageState extends State<StationsPage> {
                         children: [
                           TableRow(
                             children: [
-                              rowLeading('ID:'),
-                              rowEditor(idController, "ID", disabled: true),
+                              UIElements.rowLeading('ID:'),
+                              UIElements.rowEditor(idController, "ID", disabled: true),
                             ],
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Name:'),
-                              rowEditor(nameController, "Name"),
+                              UIElements.rowLeading('Name:'),
+                              UIElements.rowEditor(nameController, "Name"),
                             ],
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Bereich:'),
-                              rowEditor(areaController, "Bereich"),
+                              UIElements.rowLeading('Bereich:'),
+                              UIElements.rowEditor(areaController, "Bereich"),
                             ],
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Funktions-Präfix:'),
-                              rowEditor(
+                              UIElements.rowLeading('Funktions-Präfix:'),
+                              UIElements.rowEditor(
                                 prefixController,
                                 "Funktions-Präfix",
                                 validation: RegExp(r'^[a-zA-Z]+$'),
@@ -293,8 +365,8 @@ class _StationsPageState extends State<StationsPage> {
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Wachen-Nummer:'),
-                              rowEditor(
+                              UIElements.rowLeading('Wachen-Nummer:'),
+                              UIElements.rowEditor(
                                 stationNumberController,
                                 "Wachen-Nummer",
                                 validation: RegExp(r'^\d+$'),
@@ -303,13 +375,13 @@ class _StationsPageState extends State<StationsPage> {
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Adresse:'),
-                              rowEditor(addressController, "Adresse"),
+                              UIElements.rowLeading('Adresse:'),
+                              UIElements.rowEditor(addressController, "Adresse"),
                             ],
                           ),
                           TableRow(
                             children: [
-                              rowLeading('Koordinaten:'),
+                              UIElements.rowLeading('Koordinaten:'),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -319,13 +391,13 @@ class _StationsPageState extends State<StationsPage> {
                                     children: [
                                       ConstrainedBox(
                                         constraints: const BoxConstraints(maxWidth: 250),
-                                        child: rowEditor(
+                                        child: UIElements.rowEditor(
                                           coordinatesLatController,
                                           disabled: true,
                                           "Latitude",
                                         ),
                                       ),
-                                      rowLeading('° N'),
+                                      UIElements.rowLeading('° N'),
                                     ],
                                   ),
                                   Row(
@@ -333,13 +405,13 @@ class _StationsPageState extends State<StationsPage> {
                                     children: [
                                       ConstrainedBox(
                                         constraints: const BoxConstraints(maxWidth: 250),
-                                        child: rowEditor(
+                                        child: UIElements.rowEditor(
                                           coordinatesLonController,
                                           disabled: true,
                                           "Longitude",
                                         ),
                                       ),
-                                      rowLeading('° E'),
+                                      UIElements.rowLeading('° E'),
                                     ],
                                   ),
                                   FilledButton(
@@ -353,27 +425,31 @@ class _StationsPageState extends State<StationsPage> {
                                         Navigator.of(Globals.context).pop();
                                       } catch (e) {
                                         Navigator.of(Globals.context).pop();
-                                        Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+                                        Dialogs.errorDialog(message: e.toString());
                                       }
                                     },
                                   ),
                                   FilledButton(
                                     child: const Text('Auf Karte wählen'),
                                     onPressed: () async {
-                                      var result = await MapLocationPicker.pickLocation(context: context, startLatitude: double.tryParse(coordinatesLatController.text), startLongitude: double.tryParse(coordinatesLonController.text));
-                                      if (result != null) {
-                                        coordinatesLatController.text = result.latitude.toStringAsFixed(5);
-                                        coordinatesLonController.text = result.longitude.toStringAsFixed(5);
+                                      var result = await MapLocationPicker.pickLocation(
+                                        context: context,
+                                        startLatitude: double.tryParse(coordinatesLatController.text),
+                                        startLongitude: double.tryParse(coordinatesLonController.text),
+                                      );
+                                      if (result == null) return;
 
-                                        Dialogs.loadingDialog(title: 'Suche...', message: 'Suche Adresse für Koordinaten...');
-                                        try {
-                                          var address = await Interfaces.getAddress(result.latitude, result.longitude);
-                                          addressController.text = address;
-                                          Navigator.of(Globals.context).pop();
-                                        } catch (e) {
-                                          Navigator.of(Globals.context).pop();
-                                          Dialogs.errorDialog(title: 'Fehler', message: e.toString());
-                                        }
+                                      coordinatesLatController.text = result.latitude.toStringAsFixed(5);
+                                      coordinatesLonController.text = result.longitude.toStringAsFixed(5);
+
+                                      Dialogs.loadingDialog(title: 'Suche...', message: 'Suche Adresse für Koordinaten...');
+                                      try {
+                                        var address = await Interfaces.getAddress(result.latitude, result.longitude);
+                                        addressController.text = address;
+                                        Navigator.of(Globals.context).pop();
+                                      } catch (e) {
+                                        Navigator.of(Globals.context).pop();
+                                        Dialogs.errorDialog(message: e.toString());
                                       }
                                     },
                                   ),
@@ -383,6 +459,38 @@ class _StationsPageState extends State<StationsPage> {
                           ),
                         ],
                       ),
+                      UIElements.divider('Zugeordnete Einheiten'),
+                      for (var unit in selectedStationData!.units)
+                        UIElements.listButton(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    unit.callSign,
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    unit.unitDescription,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            MainPageState.selectionQueue.value = unit.id;
+                            MainPageState.page.value = NavigationPage.units;
+                          },
+                          selected: false,
+                        ),
+                      UIElements.divider('Zugeordnete Personen'),
                     ],
                   );
                 }(),
@@ -391,36 +499,6 @@ class _StationsPageState extends State<StationsPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget rowLeading(String text) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-    );
-  }
-
-  Widget rowEditor(TextEditingController controller, String text, {RegExp? validation, bool disabled = false}) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextBox(
-        controller: controller,
-        placeholder: text,
-        readOnly: disabled,
-        inputFormatters: [
-          if (validation != null) FilteringTextInputFormatter.allow(validation),
-        ],
-        style: const TextStyle(
-          fontSize: 16,
-        ),
-      ),
     );
   }
 }

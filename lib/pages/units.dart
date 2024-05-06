@@ -3,8 +3,10 @@ import 'package:panel/dialogs.dart';
 import 'package:panel/models/person.dart';
 
 import '../interfaces.dart';
+import '../main_page.dart';
 import '../models/station.dart';
 import '../models/unit.dart';
+import '../other/elements.dart';
 
 class UnitsPage extends StatefulWidget {
   const UnitsPage({super.key});
@@ -22,12 +24,12 @@ class _UnitsPageState extends State<UnitsPage> {
 
   ({List<Person> persons, Station station})? selectedUnitData;
 
-  void fetchUnits() async {
+  Future<void> fetchUnits() async {
     try {
       setState(() => loading = true);
       units = await Interfaces.unitList();
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -46,15 +48,35 @@ class _UnitsPageState extends State<UnitsPage> {
       if (id != selectedUnit!.id) return;
       selectedUnitData = result;
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     }
     setState(() {});
+  }
+
+  void selectUnit(Unit unit) {
+    if (selectedUnit?.id == unit.id) return;
+    setState(() {
+      selectedUnit = unit;
+      fetchUnit();
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    fetchUnits();
+
+    fetchUnits().then((_) {
+      try {
+        int? id = MainPageState.selectionQueue.value;
+        if (id != null) {
+          MainPageState.selectionQueue.value = null;
+          var unit = units!.firstWhere((element) => element.id == id);
+          selectUnit(unit);
+        }
+      } catch (e) {
+        print(e);
+      }
+    });
   }
 
   @override
@@ -121,17 +143,31 @@ class _UnitsPageState extends State<UnitsPage> {
                     ),
                     const SizedBox(height: 10),
                     for (var unit in filtered)
-                      Acrylic(
-                        child: ListTile(
-                          title: Text(unit.callSign),
-                          subtitle: Text(unit.unitDescription),
-                          onPressed: () {
-                            setState(() {
-                              selectedUnit = unit;
-                              fetchUnit();
-                            });
-                          },
+                      UIElements.listButton(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  unit.callSign,
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  unit.unitDescription,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                        onPressed: () => selectUnit(unit),
+                        selected: selectedUnit?.id == unit.id,
                       ),
                   ],
                 ),

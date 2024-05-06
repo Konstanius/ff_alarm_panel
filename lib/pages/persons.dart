@@ -28,7 +28,7 @@ class _PersonsPageState extends State<PersonsPage> {
       setState(() => loading = true);
       persons = await Interfaces.personList();
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -47,7 +47,7 @@ class _PersonsPageState extends State<PersonsPage> {
       if (id != selectedPerson!.id) return;
       selectedPersonData = result;
     } catch (e) {
-      Dialogs.errorDialog(title: 'Fehler', message: e.toString());
+      Dialogs.errorDialog(message: e.toString());
     }
     setState(() {});
   }

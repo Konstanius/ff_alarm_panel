@@ -217,4 +217,9 @@ abstract class Interfaces {
 
     return response.response!['address'] as String;
   }
+
+  static Future<void> stationDelete(int stationId) async {
+    var response = await _request(method: 'stationDelete', data: {'id': stationId});
+    if (response.error != null) throw response.error!;
+  }
 }
