@@ -103,10 +103,8 @@ class _ReadinessPageState extends State<ReadinessPage> {
           name: name,
           widget: Icon(
             entry.amountStationsReady > 0 ? FluentIcons.checkbox_composite : FluentIcons.blocked,
-            color: difference.inSeconds < 310
+            color: difference.inSeconds < 630
                 ? Colors.green
-                : difference.inSeconds < 610
-                ? Colors.yellow
                 : Colors.red,
           ),
         ),

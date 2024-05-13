@@ -31,6 +31,7 @@ enum NavigationPage {
   units,
   persons,
   alarms,
+  readiness,
   logs,
   auditLogs,
   administrators,
