@@ -12,6 +12,7 @@ import 'package:flutter/material.dart' as mat show Icons, Icon;
 import 'package:panel/pages/diagnostics.dart';
 import 'package:panel/pages/logs.dart';
 import 'package:panel/pages/persons.dart';
+import 'package:panel/pages/readiness.dart';
 import 'package:panel/pages/stations.dart';
 import 'package:panel/pages/units.dart';
 
@@ -146,6 +147,11 @@ class MainPageState extends State<MainPage> {
       body: const AlarmsPage(),
     ),
     PaneItemSeparator(),
+    PaneItem(
+      icon: const Icon(FluentIcons.clock),
+      title: const Text('Geo-Bereitschaft'),
+      body: const ReadinessPage(),
+    ),
     PaneItem(
       icon: const Icon(FluentIcons.text_document),
       title: const Text('Logs'),

@@ -8,6 +8,7 @@ import 'package:panel/models/alarm.dart';
 import 'package:panel/models/person.dart';
 import 'package:panel/models/station.dart';
 import 'package:panel/models/unit.dart';
+import 'package:panel/pages/readiness.dart';
 
 abstract class Interfaces {
   static const int timeout = 5000;
@@ -267,5 +268,16 @@ abstract class Interfaces {
     if (response.error != null) throw response.error!;
 
     return Station.fromJson(response.response!);
+  }
+
+  static Future<List<AdminReadinessEntry>> getReadiness() async {
+    var response = await _request(method: 'getReadiness', data: {});
+    if (response.error != null) throw response.error!;
+
+    List<AdminReadinessEntry> readiness = [];
+    for (var entry in response.response!['readiness']) {
+      readiness.add(AdminReadinessEntry.fromString(entry));
+    }
+    return readiness;
   }
 }
