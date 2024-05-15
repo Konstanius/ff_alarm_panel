@@ -71,7 +71,6 @@ class _ReadinessPageState extends State<ReadinessPage> {
 
       DateTime time = DateTime.fromMillisecondsSinceEpoch(entry.timestamp!);
       Duration difference = DateTime.now().difference(time);
-      print(difference);
 
       Person? person;
       for (var p in persons) {

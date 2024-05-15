@@ -43,6 +43,19 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.of(context).size.width < 1400) {
+      return const ScaffoldPage(
+        content: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Die FF Alarm Administrationskonsole ist nur auf Bildschirmen mit einer Breite von mindestens 1400 Pixeln verfügbar.'),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ValueListenableBuilder<bool>(
       valueListenable: Globals.loggedIn,
       builder: (context, loggedIn, child) {
