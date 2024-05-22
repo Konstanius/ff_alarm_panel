@@ -285,4 +285,48 @@ abstract class Interfaces {
     }
     return readiness;
   }
+
+  static Future<({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady})> getReadinessForUnits(List<int> units) async {
+    var response = await _request(method: 'getReadinessForUnits', data: {'units': units});
+    if (response.error != null) throw response.error!;
+
+    Map<String, int> ready = {};
+    Map<String, int> unknown = {};
+    Map<String, int> notReady = {};
+
+    for (var entry in response.response!['ready'].entries) {
+      ready[entry.key] = entry.value;
+    }
+
+    for (var entry in response.response!['unknown'].entries) {
+      unknown[entry.key] = entry.value;
+    }
+
+    for (var entry in response.response!['notReady'].entries) {
+      notReady[entry.key] = entry.value;
+    }
+
+    return (ready: ready, unknown: unknown, notReady: notReady);
+  }
+
+  static Future<Alarm> sendAlarm({
+    required String address,
+    required List<String> notes,
+    required List<int> units,
+    required int number,
+    required String word,
+    required String type,
+  }) async {
+    var response = await _request(method: 'sendAlarm', data: {
+      'address': address,
+      'notes': notes,
+      'units': units,
+      'number': number,
+      'word': word,
+      'type': type,
+    });
+    if (response.error != null) throw response.error!;
+
+    return Alarm.fromJson(response.response!);
+  }
 }

@@ -6,6 +6,7 @@ import 'package:panel/globals.dart';
 import 'package:panel/interfaces.dart';
 import 'package:panel/pages/administrators.dart';
 import 'package:panel/pages/alarms.dart';
+import 'package:panel/pages/alarms_creator.dart';
 import 'package:panel/pages/audit_logs.dart';
 import 'package:panel/pages/dashboard.dart';
 import 'package:flutter/material.dart' as mat show Icons, Icon;
@@ -27,6 +28,7 @@ class MainPage extends StatefulWidget {
 
 enum NavigationPage {
   dashboard,
+  alarmsCreator,
   stations,
   units,
   persons,
@@ -125,6 +127,11 @@ class MainPageState extends State<MainPage> {
       icon: const Icon(FluentIcons.home),
       title: const Text('Startseite'),
       body: const DashboardPage(),
+    ),
+    PaneItem(
+      icon: const Icon(FluentIcons.new_analytics_query),
+      title: const Text('Neue Einsatz-Alarmierung'),
+      body: const AlarmsCreatorPage(),
     ),
     PaneItemSeparator(),
     PaneItem(
