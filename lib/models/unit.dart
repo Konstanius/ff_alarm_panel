@@ -1,3 +1,6 @@
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/material.dart' as mat show Icons;
+
 class Unit {
   int id;
   String tetraId;
@@ -29,6 +32,8 @@ class Unit {
 
   String unitDescription;
   int status;
+  UnitStatus get statusEnum => UnitStatus.fromInt(status);
+
   List<UnitPosition> positions;
   int capacity;
   DateTime updated;
@@ -98,4 +103,96 @@ enum UnitPosition {
   stf,
   stm,
   me;
+}
+
+enum UnitStatus {
+  invalid,
+  onRadio,
+  onStation,
+  onRoute,
+  onScene,
+  notAvailable,
+  toHospital,
+  atHospital;
+
+  static const Map<UnitStatus, int> sw = {
+    UnitStatus.invalid: 0,
+    UnitStatus.onRadio: 1,
+    UnitStatus.onStation: 2,
+    UnitStatus.onRoute: 3,
+    UnitStatus.onScene: 4,
+    UnitStatus.notAvailable: 6,
+    UnitStatus.toHospital: 7,
+    UnitStatus.atHospital: 8,
+  };
+
+  static UnitStatus fromInt(int status) {
+    for (var entry in sw.entries) {
+      if (entry.value == status) return entry.key;
+    }
+    return UnitStatus.invalid;
+  }
+
+  int get value => sw[this] ?? 0;
+
+  IconData get icon {
+    switch (this) {
+      case UnitStatus.invalid:
+        return mat.Icons.question_mark_outlined;
+      case UnitStatus.onRadio:
+        return mat.Icons.radio_outlined;
+      case UnitStatus.onStation:
+        return mat.Icons.home_outlined;
+      case UnitStatus.onRoute:
+        return mat.Icons.directions_outlined;
+      case UnitStatus.onScene:
+        return mat.Icons.location_on_outlined;
+      case UnitStatus.notAvailable:
+        return mat.Icons.block_outlined;
+      case UnitStatus.toHospital:
+        return mat.Icons.emergency_outlined;
+      case UnitStatus.atHospital:
+        return mat.Icons.local_hospital_outlined;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case UnitStatus.invalid:
+        return Colors.grey;
+      case UnitStatus.onRadio:
+        return Colors.blue;
+      case UnitStatus.onStation:
+        return Colors.green;
+      case UnitStatus.onRoute:
+      case UnitStatus.toHospital:
+        return Colors.orange;
+      case UnitStatus.onScene:
+      case UnitStatus.atHospital:
+        return Colors.red;
+      case UnitStatus.notAvailable:
+        return Colors.grey;
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case UnitStatus.invalid:
+        return 'Ungültiger Status';
+      case UnitStatus.onRadio:
+        return 'Frei über Funk';
+      case UnitStatus.onStation:
+        return 'Auf Wache';
+      case UnitStatus.onRoute:
+        return 'Einsatz übernommen';
+      case UnitStatus.onScene:
+        return 'Am Einsatzort';
+      case UnitStatus.notAvailable:
+        return 'Nicht einsatzbereit';
+      case UnitStatus.toHospital:
+        return 'Patient aufgenommen';
+      case UnitStatus.atHospital:
+        return 'Am Zielort angekommen';
+    }
+  }
 }

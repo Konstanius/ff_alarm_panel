@@ -31,6 +31,8 @@ class _ReadinessPageState extends State<ReadinessPage> {
 
   late Timer timer;
 
+  bool errorDisplayed = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +41,11 @@ class _ReadinessPageState extends State<ReadinessPage> {
     Interfaces.personList().then((value) {
       persons = value;
       updatePositions();
+    }).catchError((e, s) {
+      if (!errorDisplayed) {
+        Dialogs.errorDialog(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
+        errorDisplayed = true;
+      }
     });
 
     timer = Timer.periodic(const Duration(seconds: 3), (_) {
@@ -55,7 +62,10 @@ class _ReadinessPageState extends State<ReadinessPage> {
 
       updatePositions();
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      if (!errorDisplayed) {
+        Dialogs.errorDialog(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
+        errorDisplayed = true;
+      }
     } finally {
       busy = false;
       if (loading) {
@@ -100,11 +110,19 @@ class _ReadinessPageState extends State<ReadinessPage> {
           id: entry.personId.toString(),
           position: LatLng(entry.lat!, entry.lon!),
           name: name,
-          widget: Icon(
-            entry.amountStationsReady > 0 ? FluentIcons.checkbox_composite : FluentIcons.blocked,
-            color: difference.inSeconds < 630
-                ? Colors.green
-                : Colors.red,
+          widget: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                entry.amountStationsReady > 0 ? FluentIcons.checkbox_composite : FluentIcons.blocked,
+                color: entry.amountStationsReady > 0 ? Colors.green : Colors.red,
+              ),
+              const SizedBox(width: 10),
+              Icon(
+                FluentIcons.location,
+                color: difference.inSeconds > 1200 ? Colors.red : Colors.green,
+              )
+            ],
           ),
         ),
       );
@@ -123,24 +141,6 @@ class _ReadinessPageState extends State<ReadinessPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (loading) return const Center(child: ProgressRing());
-
-    if (lastUpdate == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Fehler beim Laden der Bereitschaftsdaten'),
-            const SizedBox(height: 10),
-            FilledButton(
-              onPressed: fetchReadiness,
-              child: const Text('Erneut versuchen'),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: ClipRRect(
@@ -148,32 +148,14 @@ class _ReadinessPageState extends State<ReadinessPage> {
         borderRadius: BorderRadius.circular(20),
         child: ColoredBox(
           color: Colors.grey.withOpacity(0.1),
-          child: () {
-            double lat = 0;
-            double lon = 0;
-            int count = 0;
-            for (var entry in readinessEntries) {
-              if (entry.lat != null && entry.lon != null) {
-                lat += entry.lat!;
-                lon += entry.lon!;
-                count++;
-              }
-            }
-
-            if (count > 0) {
-              lat /= count;
-              lon /= count;
-            }
-
-            return SafeArea(
-              child: MapPage(
-                controller: mapController,
-                initialPosition: LatLng(lat, lon),
-                positionsNotifier: positionsNotifier,
-                initialZoom: 10.5,
-              ),
-            );
-          }(),
+          child: SafeArea(
+            child: MapPage(
+              controller: mapController,
+              initialPosition: const LatLng(50.7249054, 11.4339675),
+              positionsNotifier: positionsNotifier,
+              initialZoom: 6.7,
+            ),
+          ),
         ),
       ),
     );

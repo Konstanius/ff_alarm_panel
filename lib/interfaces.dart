@@ -270,6 +270,11 @@ abstract class Interfaces {
     return Station.fromJson(response.response!);
   }
 
+  static Future<void> unitDelete(int unitId) async {
+    var response = await _request(method: 'unitDelete', data: {'id': unitId});
+    if (response.error != null) throw response.error!;
+  }
+
   static Future<List<AdminReadinessEntry>> getReadiness() async {
     var response = await _request(method: 'getReadiness', data: {});
     if (response.error != null) throw response.error!;

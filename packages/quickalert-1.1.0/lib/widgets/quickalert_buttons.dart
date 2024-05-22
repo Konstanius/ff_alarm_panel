@@ -18,6 +18,7 @@ class QuickAlertButtons extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           cancelBtn(context),
+          if (options.type != QuickAlertType.loading) const SizedBox(width: 10.0),
           options.type != QuickAlertType.loading
               ? okayBtn(context)
               : const SizedBox.shrink(),
@@ -98,7 +99,7 @@ class QuickAlertButtons extends StatelessWidget {
       ),
     );
 
-    final cancelBtn = GestureDetector(
+    final cancelBtn = InkWell(
       onTap: onTap,
       child: Center(
         child: btnText,

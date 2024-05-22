@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:panel/dialogs.dart';
+import 'package:panel/globals.dart';
 import 'package:panel/models/person.dart';
+import 'package:panel/other/styles.dart';
 
 import '../interfaces.dart';
 import '../main_page.dart';
@@ -184,12 +186,176 @@ class _UnitsPageState extends State<UnitsPage> {
               child: ColoredBox(
                 color: Colors.grey.withOpacity(0.1),
                 child: () {
-                  // TODO if selectedUnit is null, show a statistic of all units
-                  if (selectedUnit == null) return const SizedBox();
+                  if (selectedUnit == null) {
+                    Map<int, Map<int, int>> statusMap = {};
+                    Set<int> statusSet = {};
+                    Map<int, String?> statusNames = {};
+                    for (var unit in units!) {
+                      statusSet.add(unit.status);
+                      var info = unit.unitInformation;
+                      if (info == null) {
+                        if (!statusMap.containsKey(-1)) statusMap[-1] = {};
+                        if (!statusMap[-1]!.containsKey(unit.status)) statusMap[-1]![unit.status] = 0;
+                        statusMap[-1]![unit.status] = statusMap[-1]![unit.status]! + 1;
+                        continue;
+                      }
+
+                      if (!statusMap.containsKey(info.unitType)) statusMap[info.unitType] = {};
+                      if (!statusMap[info.unitType]!.containsKey(unit.status)) statusMap[info.unitType]![unit.status] = 0;
+                      statusMap[info.unitType]![unit.status] = statusMap[info.unitType]![unit.status]! + 1;
+
+                      if (!statusNames.containsKey(info.unitType)) {
+                        statusNames[info.unitType] = unit.unitDescription;
+                      } else if (statusNames[info.unitType] != null && statusNames[info.unitType] != unit.unitDescription) {
+                        statusNames[info.unitType] = null;
+                      }
+                    }
+
+                    List<({int unitType, Map<int, int> statusMap})> sorted = [];
+                    statusMap.forEach((key, value) {
+                      sorted.add((unitType: key, statusMap: value));
+                    });
+                    sorted.sort((a, b) => a.unitType.compareTo(b.unitType));
+
+                    List<int> sortedStatus = statusSet.toList();
+                    sortedStatus.sort();
+
+                    return SafeArea(
+                      child: ClipRRect(
+                        clipBehavior: Clip.antiAliasWithSaveLayer,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Column(
+                          children: [
+                            SingleChildScrollView(
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: ColoredBox(
+                                      color: Colors.white.withOpacity(0.3),
+                                      child: Column(
+                                        children: [
+                                          const Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Text(
+                                              'Typ',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          const Divider(),
+                                          for (var entry in sorted) ...[
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                entry.unitType == -1 ? 'Unbekannt' : ("${entry.unitType}  -  ${statusNames[entry.unitType] ?? 'Verschiedene'}"),
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  for (var status in sortedStatus)
+                                    Expanded(
+                                      child: ColoredBox(
+                                        color: UnitStatus.fromInt(status).color.withOpacity(0.3),
+                                        child: Column(
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                status.toString(),
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                            const Divider(),
+                                            for (var entry in sorted) ...[
+                                              Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  entry.statusMap[status]?.toString() ?? '0',
+                                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   if (selectedUnitData == null) return const Center(child: ProgressRing());
                   return ListView(
                     padding: const EdgeInsets.all(12),
-                    children: [],
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    selectedUnit!.id == 0 ? "Neue Einheit" : "${selectedUnit!.callSign} (${selectedUnit!.unitDescription})",
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          FilledButton(
+                            child: const Padding(
+                              padding: EdgeInsets.all(4.0),
+                              child: Text('Zurück zur Übersicht'),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                selectedUnit = null;
+                                selectedUnitData = null;
+                              });
+                            },
+                          ),
+                          if (selectedUnit!.id != 0) const SizedBox(width: 10),
+                          if (selectedUnit!.id != 0)
+                            FilledButton(
+                              onPressed: () async {
+                                bool confirm = await Dialogs.confirmDialog(title: 'Einheit löschen', message: 'Sind Sie sicher, dass Sie die Einheit löschen möchten?');
+                                if (!confirm) return;
+
+                                Dialogs.loadingDialog(title: 'Löschen...', message: 'Lösche Einheit...');
+                                try {
+                                  await Interfaces.unitDelete(selectedUnit!.id);
+                                  units!.remove(selectedUnit!);
+                                  selectedUnit = null;
+                                  selectedUnitData = null;
+                                  if (mounted) setState(() {});
+                                  fetchUnits();
+                                  Navigator.of(Globals.context).pop();
+                                } catch (e) {
+                                  Navigator.of(Globals.context).pop();
+                                  Dialogs.errorDialog(message: e.toString());
+                                }
+                              },
+                              style: UIStyles.buttonRed,
+                              child: const Padding(
+                                padding: EdgeInsets.all(4.0),
+                                child: Text('Einheit löschen'),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                   );
                 }(),
               ),

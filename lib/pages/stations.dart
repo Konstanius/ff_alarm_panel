@@ -355,7 +355,9 @@ class _StationsPageState extends State<StationsPage> {
                                   selectedStationData = null;
                                   if (mounted) setState(() {});
                                   fetchStations();
+                                  Navigator.of(Globals.context).pop();
                                 } catch (e) {
+                                  Navigator.of(Globals.context).pop();
                                   Dialogs.errorDialog(message: e.toString());
                                 }
                               },
