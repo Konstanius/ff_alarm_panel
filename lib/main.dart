@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:panel/dialogs.dart';
 import 'package:panel/main_page.dart';
 import 'package:panel/globals.dart';
 import 'package:panel/interfaces.dart';
@@ -30,15 +33,37 @@ class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
   @override
-  State<LandingPage> createState() => _LandingPageState();
+  State<LandingPage> createState() => LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class LandingPageState extends State<LandingPage> {
+  static final ValueNotifier<int> lastInteractionAgoSeconds = ValueNotifier(0);
+  static late Timer logoutTimer;
+
   @override
   void initState() {
     super.initState();
 
+    logoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!Globals.loggedIn.value) return;
+
+      if (lastInteractionAgoSeconds.value > 300) {
+        Globals.logout();
+        Dialogs.error(message: 'Sie wurden automatisch ausgeloggt, da Sie über 5 Minuten inaktiv waren.');
+        lastInteractionAgoSeconds.value = 0;
+      } else {
+        lastInteractionAgoSeconds.value++;
+      }
+    });
+
     if (Globals.loggedIn.value) Interfaces.ping().catchError((_) {});
+  }
+  
+  @override
+  void dispose() {
+    logoutTimer.cancel();
+    lastInteractionAgoSeconds.dispose();
+    super.dispose();
   }
 
   @override

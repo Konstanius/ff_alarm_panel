@@ -30,7 +30,7 @@ class _PersonsPageState extends State<PersonsPage> {
       setState(() => loading = true);
       persons = await Interfaces.personList();
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -49,7 +49,7 @@ class _PersonsPageState extends State<PersonsPage> {
       if (id != selectedPerson!.id) return;
       selectedPersonData = result;
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     }
     setState(() {});
   }
@@ -74,7 +74,7 @@ class _PersonsPageState extends State<PersonsPage> {
           selectPerson(person);
         }
       } catch (e) {
-        Dialogs.errorDialog(message: "Die ausgewählte Person konnte nicht gefunden werden.");
+        Dialogs.error(message: "Die ausgewählte Person konnte nicht gefunden werden.");
       }
     });
   }

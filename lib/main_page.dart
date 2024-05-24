@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:html';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:panel/globals.dart';
-import 'package:panel/interfaces.dart';
 import 'package:panel/pages/administrators.dart';
 import 'package:panel/pages/alarms.dart';
 import 'package:panel/pages/alarms_creator.dart';
@@ -17,6 +15,7 @@ import 'package:panel/pages/readiness.dart';
 import 'package:panel/pages/stations.dart';
 import 'package:panel/pages/units.dart';
 
+import 'main.dart';
 import 'other/styles.dart';
 
 class MainPage extends StatefulWidget {
@@ -44,9 +43,6 @@ class MainPageState extends State<MainPage> {
   static final ValueNotifier<NavigationPage> page = ValueNotifier(NavigationPage.dashboard);
   static final ValueNotifier<int?> selectionQueue = ValueNotifier(null);
 
-  int lastMouseMoved = DateTime.now().millisecondsSinceEpoch;
-  Timer? timer;
-
   @override
   void initState() {
     super.initState();
@@ -55,29 +51,12 @@ class MainPageState extends State<MainPage> {
     if (uri.queryParameters.isEmpty) return;
     uri = uri.replace(queryParameters: {});
     window.history.pushState({}, '', uri.toString());
-
-    timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      Interfaces.ping().catchError((e, s) {
-        print('Ping error: $e\n$s');
-      });
-      if (DateTime.now().millisecondsSinceEpoch - lastMouseMoved < 31000) {
-        Interfaces.ping().catchError((_) {});
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: MouseRegion(
-        onHover: (_) => lastMouseMoved = DateTime.now().millisecondsSinceEpoch,
-        child: ValueListenableBuilder(
+      child: ValueListenableBuilder(
           valueListenable: page,
           builder: (context, NavigationPage page, child) {
             return NavigationView(
@@ -101,10 +80,85 @@ class MainPageState extends State<MainPage> {
                 ),
                 actions: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: FilledButton(
-                    onPressed: Globals.logout,
-                    style: UIStyles.buttonRed,
-                    child: const Text('Abmelden'),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton(
+                        onPressed: Globals.logout,
+                        style: UIStyles.buttonRed,
+                        child: const Text('Abmelden'),
+                      ),
+                      const SizedBox(width: 8),
+                      ValueListenableBuilder(
+                        valueListenable: LandingPageState.lastInteractionAgoSeconds,
+                        builder: (context, int lastInteraction, child) {
+                          double progress = 100 - lastInteraction / 300 * 100;
+
+                          List<Color> colors = [
+                            Colors.green,
+                            Colors.yellow,
+                            Colors.orange,
+                            Colors.red,
+                          ];
+
+                          // smooth transition between colors
+                          Color first;
+                          Color second;
+                          int invertProgress = 100 - progress.toInt();
+                          switch (invertProgress ~/ 25) {
+                            case 0:
+                              first = colors[0];
+                              second = colors[0];
+                              break;
+                            case 1:
+                              first = colors[0];
+                              second = colors[1];
+                              break;
+                            case 2:
+                              first = colors[1];
+                              second = colors[2];
+                              break;
+                            default:
+                              first = colors[2];
+                              second = colors[3];
+                              break;
+                          }
+
+                          int firstProgress = invertProgress % 25 * 4;
+                          Color color = Color.lerp(first, second, firstProgress / 100)!;
+
+                          return Tooltip(
+                            displayHorizontally: false,
+                            enableFeedback: false,
+                            richMessage: WidgetSpan(
+                              child: ValueListenableBuilder(
+                                valueListenable: LandingPageState.lastInteractionAgoSeconds,
+                                builder: (context, int ago, child) {
+                                  int remaining = 300 - ago;
+                                  int minutes = remaining ~/ 60;
+                                  int seconds = remaining % 60;
+                                  if (minutes > 0) {
+                                    return Text('Automatische Abmeldung in ${minutes}m ${seconds}s');
+                                  }
+                                  return Text('Automatische Abmeldung in ${seconds}s');
+                                },
+                              ),
+                            ),
+                            triggerMode: TooltipTriggerMode.manual,
+                            useMousePosition: false,
+                            style: const TooltipThemeData(
+                              preferBelow: true,
+                              waitDuration: Duration.zero,
+                            ),
+                            child: ProgressRing(
+                              value: progress,
+                              strokeWidth: 4,
+                              activeColor: color,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -115,9 +169,7 @@ class MainPageState extends State<MainPage> {
                 items: items,
               ),
             );
-          }
-        ),
-      ),
+          }),
     );
   }
 

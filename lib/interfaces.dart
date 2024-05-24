@@ -4,6 +4,7 @@ import 'dart:html';
 import 'package:archive/archive.dart';
 import 'package:panel/globals.dart';
 import 'package:dio/dio.dart';
+import 'package:panel/main.dart';
 import 'package:panel/models/alarm.dart';
 import 'package:panel/models/person.dart';
 import 'package:panel/models/station.dart';
@@ -50,6 +51,7 @@ abstract class Interfaces {
       }
 
       if (response.statusCode == HttpStatus.ok) {
+        LandingPageState.lastInteractionAgoSeconds.value = 0;
         if (Globals.loginInformation != null) {
           Globals.loginInformation!.updated = DateTime.now();
           Globals.prefs.setInt('auth_updated', Globals.loginInformation!.updated.millisecondsSinceEpoch);
@@ -286,27 +288,33 @@ abstract class Interfaces {
     return readiness;
   }
 
-  static Future<({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady})> getReadinessForUnits(List<int> units) async {
+  static Future<Map<String, ({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady})>> getReadinessForUnits(List<int> units) async {
     var response = await _request(method: 'getReadinessForUnits', data: {'units': units});
     if (response.error != null) throw response.error!;
 
-    Map<String, int> ready = {};
-    Map<String, int> unknown = {};
-    Map<String, int> notReady = {};
+    Map<String, ({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady})> data = {};
 
-    for (var entry in response.response!['ready'].entries) {
-      ready[entry.key] = entry.value;
+    for (var entry in response.response!.entries) {
+      Map<String, int> ready = {};
+      Map<String, int> unknown = {};
+      Map<String, int> notReady = {};
+
+      for (var entry in entry.value['ready'].entries) {
+        ready[entry.key] = entry.value;
+      }
+
+      for (var entry in entry.value['unknown'].entries) {
+        unknown[entry.key] = entry.value;
+      }
+
+      for (var entry in entry.value['notReady'].entries) {
+        notReady[entry.key] = entry.value;
+      }
+
+      data[entry.key] = (ready: ready, unknown: unknown, notReady: notReady);
     }
 
-    for (var entry in response.response!['unknown'].entries) {
-      unknown[entry.key] = entry.value;
-    }
-
-    for (var entry in response.response!['notReady'].entries) {
-      notReady[entry.key] = entry.value;
-    }
-
-    return (ready: ready, unknown: unknown, notReady: notReady);
+    return data;
   }
 
   static Future<Alarm> sendAlarm({

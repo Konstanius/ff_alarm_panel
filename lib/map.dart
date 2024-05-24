@@ -274,7 +274,7 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
                     FilledButton(
                       onPressed: () {
                         if (positionsNotifier.value.isEmpty) {
-                          Dialogs.errorDialog(message: 'Bitte wählen Sie eine Position auf der Karte aus.');
+                          Dialogs.error(message: 'Bitte wählen Sie eine Position auf der Karte aus.');
                         }
                         Navigator.of(Globals.context).pop((latitude: positionsNotifier.value[0].position.latitude, longitude: positionsNotifier.value[0].position.longitude));
                       },

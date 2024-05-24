@@ -4,7 +4,7 @@ import 'package:quickalert/quickalert.dart';
 import 'globals.dart';
 
 abstract class Dialogs {
-  static Future<void> errorDialog({
+  static Future<void> error({
     required String message,
   }) =>
       QuickAlert.show(
@@ -16,7 +16,7 @@ abstract class Dialogs {
         width: 400,
       );
 
-  static void loadingDialog({
+  static void loading({
     required String title,
     required String message,
   }) {
@@ -33,7 +33,7 @@ abstract class Dialogs {
     );
   }
 
-  static Future<bool> confirmDialog({
+  static Future<bool> confirm({
     required String title,
     required String message,
   }) async {

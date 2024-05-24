@@ -31,7 +31,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
       setState(() => loading = true);
       alarms = await Interfaces.alarmList();
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -50,7 +50,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
       if (id != selectedAlarm!.id) return;
       selectedAlarmData = result;
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     }
     setState(() {});
   }
@@ -75,7 +75,7 @@ class _AlarmsPageState extends State<AlarmsPage> {
           selectAlarm(alarm);
         }
       } catch (e) {
-        Dialogs.errorDialog(message: "Die ausgewählte Alarmierung konnte nicht gefunden werden.");
+        Dialogs.error(message: "Die ausgewählte Alarmierung konnte nicht gefunden werden.");
       }
     });
   }

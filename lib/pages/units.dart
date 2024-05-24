@@ -31,7 +31,7 @@ class _UnitsPageState extends State<UnitsPage> {
       setState(() => loading = true);
       units = await Interfaces.unitList();
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -50,7 +50,7 @@ class _UnitsPageState extends State<UnitsPage> {
       if (id != selectedUnit!.id) return;
       selectedUnitData = result;
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     }
     setState(() {});
   }
@@ -76,7 +76,7 @@ class _UnitsPageState extends State<UnitsPage> {
           selectUnit(unit);
         }
       } catch (e) {
-        Dialogs.errorDialog(message: "Die ausgewählte Einheit konnte nicht gefunden werden.");
+        Dialogs.error(message: "Die ausgewählte Einheit konnte nicht gefunden werden.");
       }
     });
   }
@@ -329,10 +329,10 @@ class _UnitsPageState extends State<UnitsPage> {
                           if (selectedUnit!.id != 0)
                             FilledButton(
                               onPressed: () async {
-                                bool confirm = await Dialogs.confirmDialog(title: 'Einheit löschen', message: 'Sind Sie sicher, dass Sie die Einheit löschen möchten?');
+                                bool confirm = await Dialogs.confirm(title: 'Einheit löschen', message: 'Sind Sie sicher, dass Sie die Einheit löschen möchten?');
                                 if (!confirm) return;
 
-                                Dialogs.loadingDialog(title: 'Löschen...', message: 'Lösche Einheit...');
+                                Dialogs.loading(title: 'Löschen...', message: 'Lösche Einheit...');
                                 try {
                                   await Interfaces.unitDelete(selectedUnit!.id);
                                   units!.remove(selectedUnit!);
@@ -343,7 +343,7 @@ class _UnitsPageState extends State<UnitsPage> {
                                   Navigator.of(Globals.context).pop();
                                 } catch (e) {
                                   Navigator.of(Globals.context).pop();
-                                  Dialogs.errorDialog(message: e.toString());
+                                  Dialogs.error(message: e.toString());
                                 }
                               },
                               style: UIStyles.buttonRed,

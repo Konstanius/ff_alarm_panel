@@ -265,14 +265,14 @@ class _LoginPageState extends State<LoginPage> {
     String otp = otpControllers.map((e) => e.text).join();
 
     if (user.isEmpty || pass.isEmpty || otp.length != 6) {
-      Dialogs.errorDialog(
+      Dialogs.error(
         message: 'Sie müssen zum Anmelden alle Felder ausfüllen.',
       );
       return;
     }
 
     try {
-      Dialogs.loadingDialog(
+      Dialogs.loading(
         title: 'Anmelden...',
         message: 'Die Anmeldung wird durchgeführt. Bitte warten Sie einen Moment.',
       );
@@ -280,7 +280,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(Globals.context).pop();
     } catch (e) {
       Navigator.of(Globals.context).pop();
-      Dialogs.errorDialog(
+      Dialogs.error(
         message: e.toString(),
       );
 

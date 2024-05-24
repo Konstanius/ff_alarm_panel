@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart' as mat show Icon;
@@ -36,7 +37,7 @@ class _AlarmsCreatorPageState extends State<AlarmsCreatorPage> {
 
   bool busy = false;
   bool queued = false;
-  ({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady}) readiness = (ready: {}, unknown: {}, notReady: {});
+  Map<String, ({Map<String, int> ready, Map<String, int> unknown, Map<String, int> notReady})> readiness = {};
 
   @override
   void initState() {
@@ -63,7 +64,7 @@ class _AlarmsCreatorPageState extends State<AlarmsCreatorPage> {
         readiness = result;
       });
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       busy = false;
     }
@@ -79,7 +80,7 @@ class _AlarmsCreatorPageState extends State<AlarmsCreatorPage> {
       persons = await Interfaces.personList();
       persons!.sort((a, b) => a.fullName.compareTo(b.fullName));
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -294,227 +295,249 @@ class _AlarmsCreatorPageState extends State<AlarmsCreatorPage> {
                           ],
                         ),
                       ),
-                      () {
-                        List<({String qualification, int ready, int unknown, int notReady})> qualifications = [];
-                        Set<String> seenQualifications = {};
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.all(12),
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: () async {
+                                      bool? confirm = await Dialogs.confirm(
+                                        title: 'Alarm senden',
+                                        message: 'Sind Sie sicher, dass Sie den Alarm senden möchten?',
+                                      );
+                                      if (confirm != true) return;
 
-                        for (var key in readiness.ready.keys) {
-                          if (key.isEmpty) continue;
-                          if (seenQualifications.contains(key)) continue;
-                          seenQualifications.add(key);
-                          qualifications.add((
-                            qualification: key,
-                            ready: readiness.ready[key] ?? 0,
-                            unknown: readiness.unknown[key] ?? 0,
-                            notReady: readiness.notReady[key] ?? 0,
-                          ));
-                        }
+                                      if (selectedUnits.isEmpty) {
+                                        Dialogs.error(message: 'Keine Einheiten ausgewählt');
+                                        return;
+                                      }
 
-                        for (var key in readiness.unknown.keys) {
-                          if (key.isEmpty) continue;
-                          if (seenQualifications.contains(key)) continue;
-                          seenQualifications.add(key);
-                          qualifications.add((
-                            qualification: key,
-                            ready: readiness.ready[key] ?? 0,
-                            unknown: readiness.unknown[key] ?? 0,
-                            notReady: readiness.notReady[key] ?? 0,
-                          ));
-                        }
+                                      if (typeController.text.isEmpty) {
+                                        Dialogs.error(message: 'Einsatz-Typ fehlt');
+                                        return;
+                                      }
 
-                        for (var key in readiness.notReady.keys) {
-                          if (key.isEmpty) continue;
-                          if (seenQualifications.contains(key)) continue;
-                          seenQualifications.add(key);
-                          qualifications.add((
-                            qualification: key,
-                            ready: readiness.ready[key] ?? 0,
-                            unknown: readiness.unknown[key] ?? 0,
-                            notReady: readiness.notReady[key] ?? 0,
-                          ));
-                        }
+                                      if (wordController.text.isEmpty) {
+                                        Dialogs.error(message: 'Stichwort fehlt');
+                                        return;
+                                      }
 
-                        qualifications.sort((a, b) => a.qualification.compareTo(b.qualification));
+                                      if (numberController.text.isEmpty) {
+                                        Dialogs.error(message: 'Einsatznummer fehlt');
+                                        return;
+                                      }
 
-                        return Expanded(
-                          child: ListView(
-                            padding: const EdgeInsets.all(12),
-                            children: [
-                              // send alarm
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: FilledButton(
-                                      onPressed: () async {
-                                        bool? confirm = await Dialogs.confirmDialog(
-                                          title: 'Alarm senden',
-                                          message: 'Sind Sie sicher, dass Sie den Alarm senden möchten?',
-                                        );
-                                        if (confirm != true) return;
+                                      if (addressController.text.isEmpty) {
+                                        Dialogs.error(message: 'Adresse fehlt');
+                                        return;
+                                      }
 
-                                        if (selectedUnits.isEmpty) {
-                                          Dialogs.errorDialog(message: 'Keine Einheiten ausgewählt');
-                                          return;
-                                        }
+                                      if (notesController.text.split('\n').length > 20) {
+                                        Dialogs.error(message: 'Maximal 20 Zeilen Notizen erlaubt');
+                                        return;
+                                      }
 
-                                        if (typeController.text.isEmpty) {
-                                          Dialogs.errorDialog(message: 'Einsatz-Typ fehlt');
-                                          return;
-                                        }
+                                      List<int> unitIds = selectedUnits.map((e) => e.id).toList();
+                                      String type = typeController.text;
+                                      String word = wordController.text;
+                                      int? number = int.tryParse(numberController.text);
+                                      if (number == null) {
+                                        Dialogs.error(message: 'Einsatznummer ist keine Zahl');
+                                        return;
+                                      }
+                                      String address = addressController.text;
+                                      String notesString = notesController.text;
+                                      List<String> notes = notesString.split('\n');
 
-                                        if (wordController.text.isEmpty) {
-                                          Dialogs.errorDialog(message: 'Stichwort fehlt');
-                                          return;
-                                        }
+                                      try {
+                                        Dialogs.loading(title: 'Alarm senden', message: 'Alarm wird gesendet...');
+                                        await Interfaces.sendAlarm(address: address, notes: notes, number: number, type: type, units: unitIds, word: word);
+                                        Navigator.of(Globals.context).pop();
 
-                                        if (numberController.text.isEmpty) {
-                                          Dialogs.errorDialog(message: 'Einsatznummer fehlt');
-                                          return;
-                                        }
-
-                                        if (addressController.text.isEmpty) {
-                                          Dialogs.errorDialog(message: 'Adresse fehlt');
-                                          return;
-                                        }
-
-                                        if (notesController.text.split('\n').length > 20) {
-                                          Dialogs.errorDialog(message: 'Maximal 20 Zeilen Notizen erlaubt');
-                                          return;
-                                        }
-
-                                        List<int> unitIds = selectedUnits.map((e) => e.id).toList();
-                                        String type = typeController.text;
-                                        String word = wordController.text;
-                                        int? number = int.tryParse(numberController.text);
-                                        if (number == null) {
-                                          Dialogs.errorDialog(message: 'Einsatznummer ist keine Zahl');
-                                          return;
-                                        }
-                                        String address = addressController.text;
-                                        String notesString = notesController.text;
-                                        List<String> notes = notesString.split('\n');
-
-                                        try {
-                                          Dialogs.loadingDialog(title: 'Alarm senden', message: 'Alarm wird gesendet...');
-                                          await Interfaces.sendAlarm(address: address, notes: notes, number: number, type: type, units: unitIds, word: word);
-                                          Navigator.of(Globals.context).pop();
-
-                                          typeController.clear();
-                                          wordController.clear();
-                                          numberController.clear();
-                                          addressController.clear();
-                                          notesController.clear();
-                                          searchController.clear();
-                                          selectedUnits.clear();
-                                          setState(() {});
-                                        } catch (e) {
-                                          Navigator.of(Globals.context).pop();
-                                          Dialogs.errorDialog(message: e.toString());
-                                        }
-                                      },
-                                      child: const Text('Alarm senden', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
-                                    ),
+                                        typeController.clear();
+                                        wordController.clear();
+                                        numberController.clear();
+                                        addressController.clear();
+                                        notesController.clear();
+                                        searchController.clear();
+                                        selectedUnits.clear();
+                                        setState(() {});
+                                      } catch (e) {
+                                        Navigator.of(Globals.context).pop();
+                                        Dialogs.error(message: e.toString());
+                                      }
+                                    },
+                                    child: const Text('Alarm senden', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              ClipRRect(
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                borderRadius: BorderRadius.circular(20),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                ),
+                              ],
+                            ),
+                            for (var entry in readiness.entries)
+                                  () {
+                                int? unitId = int.tryParse(entry.key);
+                                if (unitId == null) return const SizedBox();
+                                Unit? unit;
+                                for (var u in units!) {
+                                  if (u.id == unitId) {
+                                    unit = u;
+                                    break;
+                                  }
+                                }
+                                if (unit == null) return const SizedBox();
+
+                                List<({String qualification, int ready, int unknown, int notReady})> qualifications = [];
+                                Set<String> seenQualifications = {};
+
+                                for (var key in entry.value.ready.keys) {
+                                  if (key.isEmpty) continue;
+                                  if (seenQualifications.contains(key)) continue;
+                                  seenQualifications.add(key);
+                                  qualifications.add((
+                                  qualification: key,
+                                  ready: entry.value.ready[key] ?? 0,
+                                  unknown: entry.value.unknown[key] ?? 0,
+                                  notReady: entry.value.notReady[key] ?? 0,
+                                  ));
+                                }
+
+                                for (var key in entry.value.unknown.keys) {
+                                  if (key.isEmpty) continue;
+                                  if (seenQualifications.contains(key)) continue;
+                                  seenQualifications.add(key);
+                                  qualifications.add((
+                                  qualification: key,
+                                  ready: entry.value.ready[key] ?? 0,
+                                  unknown: entry.value.unknown[key] ?? 0,
+                                  notReady: entry.value.notReady[key] ?? 0,
+                                  ));
+                                }
+
+                                for (var key in entry.value.notReady.keys) {
+                                  if (key.isEmpty) continue;
+                                  if (seenQualifications.contains(key)) continue;
+                                  seenQualifications.add(key);
+                                  qualifications.add((
+                                  qualification: key,
+                                  ready: entry.value.ready[key] ?? 0,
+                                  unknown: entry.value.unknown[key] ?? 0,
+                                  notReady: entry.value.notReady[key] ?? 0,
+                                  ));
+                                }
+
+                                qualifications.sort((a, b) => a.qualification.compareTo(b.qualification));
+
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Expanded(
-                                      child: ColoredBox(
-                                        color: Colors.grey.withOpacity(0.1),
-                                        child: Column(
-                                          children: [
-                                            const Text('Qualifikation', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
-                                            const Divider(),
-                                            const Text(
-                                              'Gesamt:',
-                                              style: TextStyle(fontWeight: FontWeight.bold, height: 1.3, fontSize: kDefaultFontSize * 1.3),
-                                            ),
-                                            const Divider(),
-                                            for (var qualification in qualifications)
-                                              Text(
-                                                qualification.qualification,
-                                                style: const TextStyle(fontWeight: FontWeight.bold, height: 1.3, fontSize: kDefaultFontSize * 1.3),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      unit.callSign,
+                                      style: const TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold),
                                     ),
-                                    Expanded(
-                                      child: ColoredBox(
-                                        color: Colors.green.withOpacity(0.3),
-                                        child: Column(
-                                          children: [
-                                            const Text('Bereit', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
-                                            const Divider(),
-                                            Text(
-                                              readiness.ready[""]?.toString() ?? '0',
-                                              style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
-                                            ),
-                                            const Divider(),
-                                            for (var qualification in qualifications)
-                                              Text(
-                                                qualification.ready.toString(),
-                                                style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                    const SizedBox(height: 10),
+                                    ClipRRect(
+                                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Expanded(
+                                            child: ColoredBox(
+                                              color: Colors.grey.withOpacity(0.1),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text('Qualifikation', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
+                                                  const Divider(),
+                                                  const Text(
+                                                    'Gesamt:',
+                                                    style: TextStyle(fontWeight: FontWeight.bold, height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                  ),
+                                                  const Divider(),
+                                                  for (var qualification in qualifications)
+                                                    Text(
+                                                      qualification.qualification,
+                                                      style: const TextStyle(fontWeight: FontWeight.bold, height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                    ),
+                                                ],
                                               ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: ColoredBox(
-                                        color: Colors.yellow.withOpacity(0.3),
-                                        child: Column(
-                                          children: [
-                                            const Text('Unbekannt', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
-                                            const Divider(),
-                                            Text(
-                                              readiness.unknown[""]?.toString() ?? '0',
-                                              style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
                                             ),
-                                            const Divider(),
-                                            for (var qualification in qualifications)
-                                              Text(
-                                                qualification.unknown.toString(),
-                                                style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                          ),
+                                          Expanded(
+                                            child: ColoredBox(
+                                              color: Colors.green.withOpacity(0.3),
+                                              child: Column(
+                                                children: [
+                                                  const Text('Bereit', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
+                                                  const Divider(),
+                                                  Text(
+                                                    entry.value.ready[""]?.toString() ?? '0',
+                                                    style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                  ),
+                                                  const Divider(),
+                                                  for (var qualification in qualifications)
+                                                    Text(
+                                                      qualification.ready.toString(),
+                                                      style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                    ),
+                                                ],
                                               ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: ColoredBox(
-                                        color: Colors.red.withOpacity(0.3),
-                                        child: Column(
-                                          children: [
-                                            const Text('Nicht Bereit', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
-                                            const Divider(),
-                                            Text(
-                                              readiness.notReady[""]?.toString() ?? '0',
-                                              style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
                                             ),
-                                            const Divider(),
-                                            for (var qualification in qualifications)
-                                              Text(
-                                                qualification.notReady.toString(),
-                                                style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                          ),
+                                          Expanded(
+                                            child: ColoredBox(
+                                              color: Colors.yellow.withOpacity(0.3),
+                                              child: Column(
+                                                children: [
+                                                  const Text('Unbekannt', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
+                                                  const Divider(),
+                                                  Text(
+                                                    entry.value.unknown[""]?.toString() ?? '0',
+                                                    style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                  ),
+                                                  const Divider(),
+                                                  for (var qualification in qualifications)
+                                                    Text(
+                                                      qualification.unknown.toString(),
+                                                      style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                    ),
+                                                ],
                                               ),
-                                          ],
-                                        ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: ColoredBox(
+                                              color: Colors.red.withOpacity(0.3),
+                                              child: Column(
+                                                children: [
+                                                  const Text('Nicht Bereit', style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.bold)),
+                                                  const Divider(),
+                                                  Text(
+                                                    entry.value.notReady[""]?.toString() ?? '0',
+                                                    style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                  ),
+                                                  const Divider(),
+                                                  for (var qualification in qualifications)
+                                                    Text(
+                                                      qualification.notReady.toString(),
+                                                      style: const TextStyle(height: 1.3, fontSize: kDefaultFontSize * 1.3),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }(),
+                                );
+                              }(),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

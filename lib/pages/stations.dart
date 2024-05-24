@@ -89,7 +89,7 @@ class _StationsPageState extends State<StationsPage> {
       }
       this.positions.value = positions;
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     } finally {
       setState(() => loading = false);
     }
@@ -106,7 +106,7 @@ class _StationsPageState extends State<StationsPage> {
       if (id != selectedStation!.id) return;
       selectedStationData = result;
     } catch (e) {
-      Dialogs.errorDialog(message: e.toString());
+      Dialogs.error(message: e.toString());
     }
     setState(() {});
   }
@@ -123,7 +123,7 @@ class _StationsPageState extends State<StationsPage> {
           selectStation(station);
         }
       } catch (e) {
-        Dialogs.errorDialog(message: "Die ausgewählte Wache konnte nicht gefunden werden.");
+        Dialogs.error(message: "Die ausgewählte Wache konnte nicht gefunden werden.");
       }
     });
   }
@@ -340,14 +340,14 @@ class _StationsPageState extends State<StationsPage> {
                             FilledButton(
                               onPressed: () async {
                                 if (selectedStationData!.units.isNotEmpty) {
-                                  Dialogs.errorDialog(message: "Wache kann nicht gelöscht werden, da dieser noch Einheiten zugeordnet sind.");
+                                  Dialogs.error(message: "Wache kann nicht gelöscht werden, da dieser noch Einheiten zugeordnet sind.");
                                   return;
                                 }
 
-                                bool confirm = await Dialogs.confirmDialog(title: 'Wache löschen', message: 'Sind Sie sicher, dass Sie die Wache löschen möchten?');
+                                bool confirm = await Dialogs.confirm(title: 'Wache löschen', message: 'Sind Sie sicher, dass Sie die Wache löschen möchten?');
                                 if (!confirm) return;
 
-                                Dialogs.loadingDialog(title: 'Löschen...', message: 'Lösche Wache...');
+                                Dialogs.loading(title: 'Löschen...', message: 'Lösche Wache...');
                                 try {
                                   await Interfaces.stationDelete(selectedStation!.id);
                                   stations!.remove(selectedStation!);
@@ -358,7 +358,7 @@ class _StationsPageState extends State<StationsPage> {
                                   Navigator.of(Globals.context).pop();
                                 } catch (e) {
                                   Navigator.of(Globals.context).pop();
-                                  Dialogs.errorDialog(message: e.toString());
+                                  Dialogs.error(message: e.toString());
                                 }
                               },
                               style: UIStyles.buttonRed,
@@ -470,7 +470,7 @@ class _StationsPageState extends State<StationsPage> {
                                   FilledButton(
                                     child: const Text('Von Adresse suchen'),
                                     onPressed: () async {
-                                      Dialogs.loadingDialog(title: 'Suche...', message: 'Suche Koordinaten für Adresse...');
+                                      Dialogs.loading(title: 'Suche...', message: 'Suche Koordinaten für Adresse...');
                                       try {
                                         var result = await Interfaces.getCoordinates(addressController.text);
                                         coordinatesLatController.text = result.lat.toStringAsFixed(5);
@@ -478,7 +478,7 @@ class _StationsPageState extends State<StationsPage> {
                                         Navigator.of(Globals.context).pop();
                                       } catch (e) {
                                         Navigator.of(Globals.context).pop();
-                                        Dialogs.errorDialog(message: e.toString());
+                                        Dialogs.error(message: e.toString());
                                       }
                                     },
                                   ),
@@ -495,14 +495,14 @@ class _StationsPageState extends State<StationsPage> {
                                       coordinatesLatController.text = result.latitude.toStringAsFixed(5);
                                       coordinatesLonController.text = result.longitude.toStringAsFixed(5);
 
-                                      Dialogs.loadingDialog(title: 'Suche...', message: 'Suche Adresse für Koordinaten...');
+                                      Dialogs.loading(title: 'Suche...', message: 'Suche Adresse für Koordinaten...');
                                       try {
                                         var address = await Interfaces.getAddress(result.latitude, result.longitude);
                                         addressController.text = address;
                                         Navigator.of(Globals.context).pop();
                                       } catch (e) {
                                         Navigator.of(Globals.context).pop();
-                                        Dialogs.errorDialog(message: e.toString());
+                                        Dialogs.error(message: e.toString());
                                       }
                                     },
                                   ),
@@ -529,14 +529,14 @@ class _StationsPageState extends State<StationsPage> {
                                   if (coordinatesLatController.text != selectedStation!.position?.latitude.toString()) changes = true;
                                   if (coordinatesLonController.text != selectedStation!.position?.longitude.toString()) changes = true;
                                   if (!changes) return;
-                                  bool confirm = await Dialogs.confirmDialog(title: 'Änderungen speichern', message: 'Sind Sie sicher, dass Sie die Änderungen an der Wache speichern möchten?');
+                                  bool confirm = await Dialogs.confirm(title: 'Änderungen speichern', message: 'Sind Sie sicher, dass Sie die Änderungen an der Wache speichern möchten?');
                                   if (!confirm) return;
                                 } else {
-                                  bool confirm = await Dialogs.confirmDialog(title: 'Wache erstellen', message: 'Sind Sie sicher, dass Sie die Wache erstellen möchten?');
+                                  bool confirm = await Dialogs.confirm(title: 'Wache erstellen', message: 'Sind Sie sicher, dass Sie die Wache erstellen möchten?');
                                   if (!confirm) return;
                                 }
 
-                                Dialogs.loadingDialog(
+                                Dialogs.loading(
                                   title: 'Speichern...',
                                   message: selectedStation!.id == 0 ? 'Die Wache wird erstellt...' : 'Die Änderungen an der Wache werden gespeichert...',
                                 );
@@ -585,7 +585,7 @@ class _StationsPageState extends State<StationsPage> {
                                   Navigator.of(Globals.context).pop();
                                 } catch (e) {
                                   Navigator.of(Globals.context).pop();
-                                  Dialogs.errorDialog(message: e.toString());
+                                  Dialogs.error(message: e.toString());
                                 }
                               },
                               child: Padding(

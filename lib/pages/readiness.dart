@@ -43,7 +43,7 @@ class _ReadinessPageState extends State<ReadinessPage> {
       updatePositions();
     }).catchError((e, s) {
       if (!errorDisplayed) {
-        Dialogs.errorDialog(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
+        Dialogs.error(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
         errorDisplayed = true;
       }
     });
@@ -63,7 +63,7 @@ class _ReadinessPageState extends State<ReadinessPage> {
       updatePositions();
     } catch (e) {
       if (!errorDisplayed) {
-        Dialogs.errorDialog(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
+        Dialogs.error(message: "Personendaten konnten nicht geladen werden:\n$e").then((_) => errorDisplayed = false);
         errorDisplayed = true;
       }
     } finally {
